@@ -43,6 +43,18 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: 'Zilla Parishad High School, Dahiwadi'
     },
+    assignedClass: {
+      type: String,
+      default: null
+    },
+    parentContact: {
+      type: String,
+      default: ''
+    },
+    institutionalVerificationKey: {
+      type: String,
+      default: null
+    },
     studentId: {
       type: Number,
       required: function () {

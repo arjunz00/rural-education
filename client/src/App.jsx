@@ -50,13 +50,16 @@ export function App() {
 
   // If unauthenticated or navigating explicitly to /login
   if (!currentUser || currentPath.startsWith('/login')) {
-    // Extract role preset from path: e.g. /login/headmaster -> 'headmaster'
-    const match = currentPath.match(/^\/login\/?([a-zA-Z0-9_-]+)?$/);
+    const [pathPart, queryPart] = currentPath.split('?');
+    const match = pathPart.match(/^\/login\/?([a-zA-Z0-9_-]+)?$/);
     const initialRole = match && match[1] ? match[1] : 'teacher';
+    const searchParams = new URLSearchParams(queryPart || '');
+    const initialClass = searchParams.get('class');
 
     return (
       <Login
         initialRole={initialRole}
+        initialClass={initialClass}
         onLoginSuccess={() => navigateTo('/')}
       />
     );

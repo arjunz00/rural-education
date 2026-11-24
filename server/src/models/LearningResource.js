@@ -1,6 +1,8 @@
 import mongoose from 'mongoose';
 import { RESOURCE_TYPES } from '../config/constants.js';
 
+export const VALID_CLASS_LEVELS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'all'];
+
 const learningResourceSchema = new mongoose.Schema(
   {
     title: {
@@ -19,6 +21,19 @@ const learningResourceSchema = new mongoose.Schema(
       enum: RESOURCE_TYPES,
       default: 'text'
     },
+    classLevel: {
+      type: String,
+      required: true,
+      enum: VALID_CLASS_LEVELS,
+      default: 'all',
+      index: true
+    },
+    className: {
+      type: String,
+      default: function () {
+        return this.classLevel || 'all';
+      }
+    },
     description: {
       type: String,
       required: true,
@@ -34,11 +49,7 @@ const learningResourceSchema = new mongoose.Schema(
     },
     duration: {
       type: String,
-      default: '4 mins'
-    },
-    className: {
-      type: String,
-      default: 'All'
+      default: '—'
     }
   },
   {
@@ -46,6 +57,6 @@ const learningResourceSchema = new mongoose.Schema(
   }
 );
 
-learningResourceSchema.index({ subject: 1, resourceType: 1 });
+learningResourceSchema.index({ classLevel: 1, subject: 1, resourceType: 1 });
 
 export const LearningResource = mongoose.model('LearningResource', learningResourceSchema);

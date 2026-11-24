@@ -59,6 +59,26 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const register = async (userData) => {
+    setIsLoading(true);
+    setAuthError(null);
+    try {
+      const res = await authAPI.register(userData);
+      if (res.success && res.token) {
+        localStorage.setItem('rural_ed_token', res.token);
+        setToken(res.token);
+        setCurrentUser(res.user);
+        return res.user;
+      }
+      throw new Error(res.error || 'Registration failed');
+    } catch (err) {
+      setAuthError(err.message || 'Registration failed');
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const logout = async () => {
     try {
       await authAPI.logout().catch(() => {});
@@ -80,6 +100,7 @@ export const AuthProvider = ({ children }) => {
     isLoading,
     authError,
     login,
+    register,
     logout,
     role,
     isStaff,
