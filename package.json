@@ -1,0 +1,30 @@
+{
+  "name": "rural-education-remote-monitoring",
+  "version": "1.0.0",
+  "description": "Rural Education Remote Monitoring & Early Intervention System (MERN Stack)",
+  "main": "server/src/server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server/src/server.js",
+    "server": "node server/src/server.js",
+    "client": "npm --prefix client run dev",
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "seed": "node server/src/seed/seed.js",
+    "test": "node --test server/src/tests/*.test.js",
+    "install:all": "npm install && npm --prefix server install && npm --prefix client install",
+    "build": "npm --prefix client run build"
+  },
+  "keywords": [
+    "edtech",
+    "rural-education",
+    "mern",
+    "dropout-prevention",
+    "early-intervention",
+    "rbac"
+  ],
+  "author": "Antigravity Engineering",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}
