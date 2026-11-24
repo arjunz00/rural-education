@@ -47,6 +47,10 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: null
     },
+    isClassTeacher: {
+      type: Boolean,
+      default: true
+    },
     parentContact: {
       type: String,
       default: ''

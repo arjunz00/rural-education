@@ -6,6 +6,7 @@ import { Intervention } from '../models/Intervention.js';
 import { LearningResource } from '../models/LearningResource.js';
 import { Quiz } from '../models/Quiz.js';
 import { QuizSubmission } from '../models/QuizSubmission.js';
+import { Communication } from '../models/Communication.js';
 import { generateToken } from '../middleware/auth.js';
 import { ALL_ROLES, ROLES, FAMILY_ROLES } from '../config/constants.js';
 import {
@@ -15,7 +16,8 @@ import {
   seedAcademicRecords,
   seedInterventions,
   seedLearningResources,
-  seedQuizzes
+  seedQuizzes,
+  getSeedCommunications
 } from '../seed/seedData.js';
 
 export const register = async (req, res, next) => {
@@ -370,7 +372,8 @@ export const seedDemoDatabase = async (req, res, next) => {
       Intervention.deleteMany({}),
       LearningResource.deleteMany({}),
       Quiz.deleteMany({}),
-      QuizSubmission.deleteMany({})
+      QuizSubmission.deleteMany({}),
+      Communication.deleteMany({})
     ]);
 
     const usersData = await getSeedUsers();
@@ -381,6 +384,9 @@ export const seedDemoDatabase = async (req, res, next) => {
     await Intervention.insertMany(seedInterventions);
     await LearningResource.insertMany(seedLearningResources);
     await Quiz.insertMany(seedQuizzes);
+    const teacherMap = {};
+    usersData.forEach(u => { teacherMap[u.username] = u; });
+    await Communication.insertMany(getSeedCommunications(teacherMap));
 
     return res.status(200).json({
       success: true,

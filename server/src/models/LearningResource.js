@@ -63,6 +63,14 @@ const learningResourceSchema = new mongoose.Schema(
     downloadUrl: {
       type: String
     },
+    fileUrl: {
+      type: String,
+      default: ''
+    },
+    authorOrBoard: {
+      type: String,
+      default: 'Maharashtra State Bureau of Textbook Production (Balbharati)'
+    },
     createdAt: {
       type: Date,
       default: Date.now

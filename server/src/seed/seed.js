@@ -7,6 +7,7 @@ import { Intervention } from '../models/Intervention.js';
 import { LearningResource } from '../models/LearningResource.js';
 import { Quiz } from '../models/Quiz.js';
 import { QuizSubmission } from '../models/QuizSubmission.js';
+import { Communication } from '../models/Communication.js';
 import {
   getSeedUsers,
   seedStudents,
@@ -14,7 +15,8 @@ import {
   seedAcademicRecords,
   seedInterventions,
   seedLearningResources,
-  seedQuizzes
+  seedQuizzes,
+  getSeedCommunications
 } from './seedData.js';
 
 const runSeed = async () => {
@@ -25,7 +27,7 @@ const runSeed = async () => {
   try {
     await connectDB();
 
-    console.log('[1/8] Cleaning existing collections...');
+    console.log('[1/9] Cleaning existing collections...');
     await Promise.all([
       User.deleteMany({}),
       Student.deleteMany({}),
@@ -34,7 +36,8 @@ const runSeed = async () => {
       Intervention.deleteMany({}),
       LearningResource.deleteMany({}),
       Quiz.deleteMany({}),
-      QuizSubmission.deleteMany({})
+      QuizSubmission.deleteMany({}),
+      Communication.deleteMany({})
     ]);
     console.log('  ✓ Cleaned collections successfully.');
 
@@ -64,9 +67,16 @@ const runSeed = async () => {
     const resources = await LearningResource.insertMany(seedLearningResources);
     console.log(`  ✓ Created ${resources.length} curriculum-standard learning resources (audio + text).`);
 
-    console.log('[8/8] Seeding Targeted Remedial Practice Quizzes & Diagnostic Tests...');
+    console.log('[8/9] Seeding Targeted Remedial Practice Quizzes & Diagnostic Tests...');
     const quizzes = await Quiz.insertMany(seedQuizzes);
     console.log(`  ✓ Created ${quizzes.length} remedial practice quizzes.`);
+
+    console.log('[9/9] Seeding Real-Time Teacher-Parent Communication Notices...');
+    const teacherUserMap = {};
+    users.forEach(u => { teacherUserMap[u.username] = u; });
+    const seedComms = getSeedCommunications(teacherUserMap);
+    const comms = await Communication.insertMany(seedComms);
+    console.log(`  ✓ Created ${comms.length} real-time communication notices.`);
 
     console.log('\n======================================================');
     console.log('✅ Database Seeding Complete!');
@@ -77,6 +87,7 @@ const runSeed = async () => {
     console.log(`   - Total Teacher Interventions: ${interventions.length}`);
     console.log(`   - Total Class 1-10 Learning Resources: ${resources.length}`);
     console.log(`   - Total Remedial Quizzes: ${quizzes.length}`);
+    console.log(`   - Total ERP Communications: ${comms.length}`);
     console.log('Default Password for all seeded accounts: "password123"');
     console.log('======================================================\n');
   } catch (err) {

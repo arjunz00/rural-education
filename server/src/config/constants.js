@@ -38,7 +38,15 @@ export const ATTENDANCE_OUTCOMES = [
   'insufficient_data'
 ];
 
-export const RESOURCE_TYPES = ['text', 'audio', 'video'];
+export const RESOURCE_TYPES = ['text', 'audio', 'video', 'textbook', 'notes', 'worksheet'];
+
+export const COMMUNICATION_CATEGORIES = [
+  'attendance_alert',
+  'academic_feedback',
+  'homework',
+  'general_notice',
+  'urgent_call'
+];
 
 export const RISK_THRESHOLDS = {
   MIN_OBSERVATION_DAYS: 10,

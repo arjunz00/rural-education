@@ -21,6 +21,7 @@ export const ParentStudentPortal = ({ subTab = 'all' }) => {
   const [attendanceData, setAttendanceData] = useState(null);
   const [academicData, setAcademicData] = useState(null);
   const [interventions, setInterventions] = useState([]);
+  const [communications, setCommunications] = useState([]);
   const [resources, setResources] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -41,6 +42,17 @@ export const ParentStudentPortal = ({ subTab = 'all' }) => {
     document.body.removeChild(a);
   };
 
+  const handleMarkNoticeRead = async (noticeId) => {
+    try {
+      await communicationsAPI.markAsRead(noticeId);
+      setCommunications(prev =>
+        prev.map(c => (c._id === noticeId ? { ...c, readStatus: true, readAt: new Date() } : c))
+      );
+    } catch (err) {
+      console.warn('Failed to mark notice read:', err);
+    }
+  };
+
   useEffect(() => {
     const fetchPortalData = async () => {
       if (!linkedStudentId) {
@@ -54,12 +66,13 @@ export const ParentStudentPortal = ({ subTab = 'all' }) => {
 
       try {
         // Fetch all scoped endpoints in parallel
-        const [studentRes, attRes, acadRes, intRes, resRes] = await Promise.all([
+        const [studentRes, attRes, acadRes, intRes, resRes, commRes] = await Promise.all([
           studentsAPI.getStudentById(linkedStudentId),
           studentsAPI.getStudentAttendance(linkedStudentId),
           studentsAPI.getStudentAcademic(linkedStudentId),
           studentsAPI.getStudentInterventions(linkedStudentId),
-          resourcesAPI.getAll()
+          resourcesAPI.getAll(),
+          communicationsAPI.getStudentCommunications(linkedStudentId).catch(() => ({ data: [] }))
         ]);
 
         if (studentRes.success) setStudent(studentRes.data);
@@ -67,6 +80,7 @@ export const ParentStudentPortal = ({ subTab = 'all' }) => {
         if (acadRes.success) setAcademicData(acadRes);
         if (intRes.success) setInterventions(intRes.data || []);
         if (resRes.success) setResources(resRes.data || []);
+        if (commRes.data) setCommunications(commRes.data || []);
       } catch (err) {
         console.error('Failed to load child portal data:', err);
         setError(err.message || 'Error fetching child records.');
@@ -322,7 +336,115 @@ export const ParentStudentPortal = ({ subTab = 'all' }) => {
         <RemedialQuizSection studentId={linkedStudentId} classLevel={student?.className} />
       )}
 
-      {/* 5. Teacher Outreach & Proactive Interventions History */}
+      {/* 5. Real-Time Teacher Notice & Communication Desk (ERP Feed) */}
+      {(subTab === 'all' || subTab === 'notices' || subTab === 'interventions') && (
+        <div className="portal-section-card">
+          <div className="section-card-header">
+            <div className="flex items-center gap-2">
+              <Icon name="message-square" size={18} color="#4f46e5" />
+              <h3>Teacher Notice & Direct Communication Desk</h3>
+            </div>
+            <div className="flex items-center gap-2">
+              {communications.filter(c => !c.readStatus).length > 0 && (
+                <span className="badge badge-warning" style={{ fontWeight: 'bold' }}>
+                  🔔 {communications.filter(c => !c.readStatus).length} Unread Notice{communications.filter(c => !c.readStatus).length > 1 ? 's' : ''}
+                </span>
+              )}
+              <span className="badge badge-outline">Live ERP Feed</span>
+            </div>
+          </div>
+
+          {communications.length === 0 ? (
+            <div className="empty-interventions-state">
+              <Icon name="check-circle" size={28} color="#059669" />
+              <p className="font-semibold mt-1">No Active Teacher Notices</p>
+              <span className="text-xs text-muted">
+                Your child's class teacher has not posted any pending attendance warnings or academic notices.
+              </span>
+            </div>
+          ) : (
+            <div className="intervention-timeline">
+              {communications.map((comm, idx) => {
+                const isUrgent = comm.isUrgent || comm.category === 'attendance_alert' || comm.category === 'urgent_call';
+                const createdDate = comm.createdAt ? new Date(comm.createdAt).toLocaleDateString('en-IN', {
+                  day: 'numeric',
+                  month: 'short',
+                  year: 'numeric'
+                }) : 'Today';
+
+                return (
+                  <div
+                    key={comm._id || idx}
+                    className={`timeline-entry ${isUrgent ? 'open' : 'resolved'}`}
+                    style={{
+                      borderLeft: isUrgent ? '4px solid #ef4444' : '4px solid #4f46e5',
+                      backgroundColor: comm.readStatus ? 'transparent' : '#f8fafc',
+                      padding: '1rem',
+                      marginBottom: '0.75rem',
+                      borderRadius: 'var(--radius-sm)',
+                      boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
+                    }}
+                  >
+                    <div className="flex justify-between items-start flex-wrap gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span
+                          className={`badge ${isUrgent ? 'badge-danger' : 'badge-primary'}`}
+                          style={{ fontSize: '0.75rem', textTransform: 'uppercase' }}
+                        >
+                          {comm.category ? comm.category.replace('_', ' ') : 'NOTICE'}
+                        </span>
+                        {isUrgent && (
+                          <span className="badge badge-danger" style={{ fontWeight: 'bold' }}>
+                            🚨 Urgent
+                          </span>
+                        )}
+                        <h4 className="font-bold text-base" style={{ margin: 0 }}>{comm.title}</h4>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-muted">
+                          <Icon name="clock" size={12} /> {createdDate}
+                        </span>
+                        {comm.readStatus ? (
+                          <span className="status-pill status-resolved" style={{ fontSize: '0.75rem' }}>
+                            ✓ Seen
+                          </span>
+                        ) : (
+                          <button
+                            type="button"
+                            className="btn btn-outline btn-sm"
+                            style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem' }}
+                            onClick={() => handleMarkNoticeRead(comm._id)}
+                          >
+                            Mark as Read
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    <p className="mt-2 text-sm" style={{ color: 'var(--text-main)', lineHeight: 1.5 }}>
+                      {comm.messageText}
+                    </p>
+
+                    <div className="mt-2 pt-2 border-t flex justify-between items-center text-xs text-muted">
+                      <span>
+                        Sent by: <strong>{comm.senderTeacherName || 'Class Teacher'}</strong> (Class {comm.classLevel || student?.className})
+                      </span>
+                      {comm.readStatus && comm.readAt && (
+                        <span>
+                          Acknowledged: {new Date(comm.readAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* 6. Teacher Outreach & Proactive Interventions History */}
       {(subTab === 'all' || subTab === 'interventions') && (
         <div className="portal-section-card">
           <div className="section-card-header">

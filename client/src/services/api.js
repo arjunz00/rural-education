@@ -63,7 +63,8 @@ export const authAPI = {
   }),
   getMe: () => apiRequest('/auth/me'),
   logout: () => apiRequest('/auth/logout', { method: 'POST' }),
-  getDemoAccounts: () => apiRequest('/auth/demo-accounts')
+  getDemoAccounts: () => apiRequest('/auth/demo-accounts'),
+  seedDemo: () => apiRequest('/auth/seed-demo?force=true')
 };
 
 export const studentsAPI = {
@@ -174,6 +175,22 @@ export const quizzesAPI = {
     body: JSON.stringify(payload)
   }),
   getSubmissions: (studentId) => apiRequest(`/quizzes/submissions/${studentId}`)
+};
+
+export const communicationsAPI = {
+  getStudentCommunications: (studentId) => apiRequest(`/communications/student/${studentId}`),
+  sendMessage: (data) => apiRequest('/communications', {
+    method: 'POST',
+    body: JSON.stringify(data)
+  }),
+  broadcastToClass: (data) => apiRequest('/communications/broadcast-class', {
+    method: 'POST',
+    body: JSON.stringify(data)
+  }),
+  markAsRead: (id) => apiRequest(`/communications/${id}/read`, {
+    method: 'PATCH'
+  }),
+  getUnreadCount: (studentId) => apiRequest(`/communications/unread-count/${studentId}`)
 };
 
 export const healthAPI = {

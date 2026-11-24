@@ -5,7 +5,20 @@ export const getSeedUsers = async () => {
   const passwordHash = await bcrypt.hash('password123', salt);
 
   const users = [
-    // 1. Staff Accounts
+    // 1. Staff Accounts (Dedicated Class Teachers & Administrators)
+    {
+      username: 'teacher_class1',
+      email: 'teacher.class1@zp-dahiwadi.edu.in',
+      passwordHash,
+      passwordSalt: salt,
+      fullName: 'Sunita Gaikwad',
+      role: 'teacher',
+      assignedClass: '1',
+      isClassTeacher: true,
+      schoolName: 'Zilla Parishad Primary School, Circle 4',
+      studentId: null,
+      isActive: true
+    },
     {
       username: 'teacher_primary',
       email: 'teacher.primary@zp-dahiwadi.edu.in',
@@ -13,8 +26,35 @@ export const getSeedUsers = async () => {
       passwordSalt: salt,
       fullName: 'Sunita Gaikwad',
       role: 'teacher',
-      assignedClass: '2',
+      assignedClass: '1',
+      isClassTeacher: true,
       schoolName: 'Zilla Parishad Primary School, Circle 4',
+      studentId: null,
+      isActive: true
+    },
+    {
+      username: 'teacher_class3',
+      email: 'teacher.class3@zp-dahiwadi.edu.in',
+      passwordHash,
+      passwordSalt: salt,
+      fullName: 'Ramesh Patil',
+      role: 'teacher',
+      assignedClass: '3',
+      isClassTeacher: true,
+      schoolName: 'Zilla Parishad Primary School, Circle 4',
+      studentId: null,
+      isActive: true
+    },
+    {
+      username: 'teacher_class5',
+      email: 'teacher.class5@zp-dahiwadi.edu.in',
+      passwordHash,
+      passwordSalt: salt,
+      fullName: 'Vandana Shinde',
+      role: 'teacher',
+      assignedClass: '5',
+      isClassTeacher: true,
+      schoolName: 'Zilla Parishad High School, Dahiwadi',
       studentId: null,
       isActive: true
     },
@@ -26,6 +66,33 @@ export const getSeedUsers = async () => {
       fullName: 'S. Deshmukh',
       role: 'teacher',
       assignedClass: '8',
+      isClassTeacher: true,
+      schoolName: 'Zilla Parishad High School, Dahiwadi',
+      studentId: null,
+      isActive: true
+    },
+    {
+      username: 'teacher_class8',
+      email: 'teacher.class8@zp-dahiwadi.edu.in',
+      passwordHash,
+      passwordSalt: salt,
+      fullName: 'S. Deshmukh',
+      role: 'teacher',
+      assignedClass: '8',
+      isClassTeacher: true,
+      schoolName: 'Zilla Parishad High School, Dahiwadi',
+      studentId: null,
+      isActive: true
+    },
+    {
+      username: 'teacher_class10',
+      email: 'teacher.class10@zp-dahiwadi.edu.in',
+      passwordHash,
+      passwordSalt: salt,
+      fullName: 'Anand Kulkarni',
+      role: 'teacher',
+      assignedClass: '10',
+      isClassTeacher: true,
       schoolName: 'Zilla Parishad High School, Dahiwadi',
       studentId: null,
       isActive: true
@@ -38,6 +105,7 @@ export const getSeedUsers = async () => {
       fullName: 'Anand Kulkarni',
       role: 'teacher',
       assignedClass: '10',
+      isClassTeacher: true,
       schoolName: 'Zilla Parishad High School, Dahiwadi',
       studentId: null,
       isActive: true
@@ -49,6 +117,8 @@ export const getSeedUsers = async () => {
       passwordSalt: salt,
       fullName: 'Dr. K. Patil',
       role: 'headmaster',
+      assignedClass: null,
+      isClassTeacher: false,
       schoolName: 'Zilla Parishad School & Jr College, Dahiwadi',
       studentId: null,
       isActive: true
@@ -60,6 +130,8 @@ export const getSeedUsers = async () => {
       passwordSalt: salt,
       fullName: 'B. Shinde',
       role: 'admin',
+      assignedClass: null,
+      isClassTeacher: false,
       schoolName: 'Circle 4 Block Education Office',
       studentId: null,
       isActive: true
@@ -989,6 +1061,93 @@ export const seedLearningResources = [
     content: 'Grammar Capsule: Active: "The teacher graded the examination papers." Passive: "The examination papers were graded by the teacher." Remember to use past participle form (V3).',
     downloadSize: '90 KB',
     duration: '5 min'
+  },
+
+  // 📖 Official Balbharati Digital E-Textbooks (Classes 1 to 10)
+  {
+    title: 'Balbharati English Reader - Unit 1: Welcome to School & Alphabet',
+    subject: 'English',
+    classLevel: 1,
+    className: '1',
+    resourceType: 'textbook',
+    authorOrBoard: 'Maharashtra State Bureau of Textbook Production (Balbharati)',
+    description: 'Unit 1 digital chapter: Illustrated picture vocabulary, letter traces, and village school welcome.',
+    content: 'Unit 1: Welcome to School & Alphabet Fundamentals\n\n1. Look, Listen and Say: Sun, Tree, School, Teacher, Friend, Village Well.\n2. Letter tracing exercises for A, B, C, D with village animal sounds and phonetic rhymes.\n3. Activity: Draw your favourite school game and trace simple animal footprints.\n\nChapter E-Book features high-contrast illustrated reading aids optimized for mobile screens.',
+    downloadSize: '145 KB',
+    duration: '15 min read',
+    fileUrl: '/public/audio/class1_phonics_alphabet.mp3'
+  },
+  {
+    title: 'Our Friends: Animals and Plants - Chapter 4 (EVS)',
+    subject: 'EVS',
+    classLevel: 3,
+    className: '3',
+    resourceType: 'textbook',
+    authorOrBoard: 'Maharashtra State Bureau of Textbook Production (Balbharati)',
+    description: 'EVS Chapter 4: Domestic animals, farm crops, soil care, and clean water wells in rural communities.',
+    content: 'Chapter 4: Our Living Environment\n\n1. Farm Animals & Helpers: Bullocks for tilling, cows and buffaloes for nutritious milk, and earthworms that aerate fertile black soil.\n2. Water in the Village: Safe boiling methods, protecting percolation tanks, and avoiding waste dump near drinking borewells.\n3. Conservation Exercise: Plant 1 native neem or banyan sapling during the monsoon season.\n4. Questions: Why should we never wash cattle directly inside drinking water ponds?',
+    downloadSize: '160 KB',
+    duration: '20 min read'
+  },
+  {
+    title: 'Fractions & Geometrical Shapes - Chapter 6 (Mathematics)',
+    subject: 'Mathematics',
+    classLevel: 5,
+    className: '5',
+    resourceType: 'textbook',
+    authorOrBoard: 'Maharashtra State Bureau of Textbook Production (Balbharati)',
+    description: 'State Board Mathematics Chapter 6: Like/unlike fractions, practical market division, angles, and circles.',
+    content: 'Chapter 6: Fractions and Geometry\n\n1. Part of a Whole: If 1 bhakri or chapati is shared equally between 4 children, each receives 1/4.\n2. Equivalent Fractions: 1/2 = 2/4 = 4/8.\n3. Basic Geometric Shapes: Acute, Right, and Obtuse angles using a village clock tower or bullock cart axle.\n4. Practice Problems: Adding fractions with equal denominators (3/7 + 2/7 = 5/7).\n5. Everyday Arithmetic: Calculating half-kilogram and quarter-kilogram jowar prices in the weekly village haat.',
+    downloadSize: '185 KB',
+    duration: '25 min read'
+  },
+  {
+    title: 'Linear Equations in One Variable - Chapter 2 (Mathematics)',
+    subject: 'Mathematics',
+    classLevel: 8,
+    className: '8',
+    resourceType: 'textbook',
+    authorOrBoard: 'Maharashtra State Bureau of Textbook Production (Balbharati)',
+    description: 'Balbharati Class 8 Chapter 2: Solving linear algebraic equations with real-world village market examples.',
+    content: 'Chapter 2: Linear Equations in One Variable\n\n1. Standard Form: ax + b = c (where a ≠ 0).\n2. Transposition Method: Adding or subtracting constants across the equals sign changes their sign.\n3. Word Problem Model: The perimeter of a rectangular farm plot is 54 meters. If the length is 3m more than the breadth, find dimensions.\n4. Step-by-Step Solution: Let breadth = b. Length = b + 3. 2(b + b + 3) = 54 => 4b + 6 = 54 => 4b = 48 => b = 12m, length = 15m.\n5. Summary: Practice checking solutions by substituting values back into original equations.',
+    downloadSize: '210 KB',
+    duration: '30 min read'
+  },
+  {
+    title: 'Pollution of Air and Water - Chapter 18 (General Science)',
+    subject: 'Science',
+    classLevel: 8,
+    className: '8',
+    resourceType: 'textbook',
+    authorOrBoard: 'Maharashtra State Bureau of Textbook Production (Balbharati)',
+    description: 'Science Chapter 18: Rural air pollutants, crop residue burning alternatives, and safe potable water.',
+    content: 'Chapter 18: Environmental Conservation & Pollution\n\n1. Atmospheric Composition and Green House Gases.\n2. Agricultural Residue: Converting sugarcane and cotton stubble into microbial compost instead of open field burning.\n3. Potable Water Purification: Decantation, sand-carbon filter beds, and chlorination tablets for Gram Panchayat water tanks.\n4. Field Project: Test water samples from village handpumps for turbidity and excess hardness.',
+    downloadSize: '195 KB',
+    duration: '25 min read'
+  },
+  {
+    title: 'Quadratic Equations & Arithmetic Progressions - Chapter 3 & 5',
+    subject: 'Mathematics',
+    classLevel: 10,
+    className: '10',
+    resourceType: 'textbook',
+    authorOrBoard: 'Maharashtra State Bureau of Textbook Production (Balbharati)',
+    description: 'Class 10 SSC Board Chapter 3 & 5: Factorisation method, discriminant formula, and nth term of AP.',
+    content: 'Chapters 3 & 5: Board Exam Revision Module\n\n1. Quadratic Equation Standard Form: ax² + bx + c = 0.\n2. Discriminant (Δ = b² - 4ac): If Δ > 0, roots are real and unequal. If Δ = 0, roots are real and equal. If Δ < 0, roots are not real.\n3. Quadratic Formula: x = (-b ± √Δ) / 2a.\n4. Arithmetic Progression: nth term a_n = a + (n - 1)d; Sum S_n = n/2 [2a + (n - 1)d].\n5. Maharashtra State Board High-Yield Practice Problems Included.',
+    downloadSize: '240 KB',
+    duration: '40 min read'
+  },
+  {
+    title: 'Chemical Reactions & Periodic Classification - Chapter 1 & 5',
+    subject: 'Science',
+    classLevel: 10,
+    className: '10',
+    resourceType: 'textbook',
+    authorOrBoard: 'Maharashtra State Bureau of Textbook Production (Balbharati)',
+    description: 'Class 10 SSC Science Chapter 1 & 5: Balancing chemical equations, redox reactions, and Modern Periodic Table.',
+    content: 'Chapters 1 & 5: Core Chemistry Foundations\n\n1. Types of Chemical Reactions: Combination, Decomposition, Displacement, and Double Displacement.\n2. Balancing Equations: Law of Conservation of Mass requires equal atoms on reactant and product sides.\n3. Modern Periodic Law: Properties of elements are periodic functions of their atomic numbers (Henry Moseley).\n4. Trends in Groups & Periods: Atomic radius decreases across a period and increases down a group.\n5. Agricultural Applications: Understanding soil liming and fertilizer chemical reactions.',
+    downloadSize: '230 KB',
+    duration: '35 min read'
   }
 ];
 
@@ -1079,3 +1238,79 @@ export const seedQuizzes = [
     createdBy: 'Teacher Sunita Gaikwad'
   }
 ];
+
+// Real-Time Teacher-Parent Communication Feed & Institutional Notices
+export const getSeedCommunications = (teacherUserMap = {}) => {
+  const teacherDeshmukhId = teacherUserMap['teacher']?._id || teacherUserMap['teacher_class8']?._id;
+  const teacherShindeId = teacherUserMap['teacher_class5']?._id;
+  const teacherPatilId = teacherUserMap['teacher_class3']?._id;
+  const teacherGaikwadId = teacherUserMap['teacher_class1']?._id || teacherUserMap['teacher_primary']?._id;
+
+  return [
+    {
+      studentId: 801,
+      senderTeacherId: teacherDeshmukhId,
+      senderTeacherName: 'S. Deshmukh (Class 8 Teacher)',
+      classLevel: 8,
+      title: '⚠️ 3-Day Attendance Warning & Upcoming Unit Test',
+      messageText: 'Namaste Savita ji, Asha has missed 3 morning roll calls this week. Please call me or visit the school tomorrow so we can ensure she does not miss the upcoming Unit Test.',
+      category: 'attendance_alert',
+      isUrgent: true,
+      readStatus: false,
+      readAt: null,
+      createdAt: new Date('2026-11-23T10:15:00Z')
+    },
+    {
+      studentId: 801,
+      senderTeacherId: teacherDeshmukhId,
+      senderTeacherName: 'S. Deshmukh (Class 8 Teacher)',
+      classLevel: 8,
+      title: '🌟 Great Improvement in Folk Tale Pronunciation',
+      messageText: 'Asha read the Sahyadri farmer folk tale aloud with great fluency and tone today. Keep encouraging her reading at home!',
+      category: 'academic_feedback',
+      isUrgent: false,
+      readStatus: true,
+      readAt: new Date('2026-11-21T16:30:00Z'),
+      createdAt: new Date('2026-11-21T15:00:00Z')
+    },
+    {
+      studentId: 501,
+      senderTeacherId: teacherShindeId,
+      senderTeacherName: 'Vandana Shinde (Class 5 Teacher)',
+      classLevel: 5,
+      title: '📚 Remedial Math Packet: Basic Fractions & Bhakri Division',
+      messageText: 'Surekha ji, please help Rahul complete the 4 bhakri division problems tonight before morning class.',
+      category: 'homework',
+      isUrgent: false,
+      readStatus: false,
+      readAt: null,
+      createdAt: new Date('2026-11-22T14:20:00Z')
+    },
+    {
+      studentId: 301,
+      senderTeacherId: teacherPatilId,
+      senderTeacherName: 'Ramesh Patil (Class 3 Teacher)',
+      classLevel: 3,
+      title: '⚠️ Rainy Stream Warning for Dongarwadi Route',
+      messageText: 'School van will wait near the lower bridge today due to overflowing rain stream. Please escort children to the bridge safely.',
+      category: 'general_notice',
+      isUrgent: true,
+      readStatus: false,
+      readAt: null,
+      createdAt: new Date('2026-11-23T07:45:00Z')
+    },
+    {
+      studentId: 101,
+      senderTeacherId: teacherGaikwadId,
+      senderTeacherName: 'Sunita Gaikwad (Class 1 Teacher)',
+      classLevel: 1,
+      title: '🌟 Outstanding Alphabet Letter Recitation',
+      messageText: 'Sunita ji, Aarav recited the English phonics sounds beautifully in morning assembly today. Very proud of his dedication!',
+      category: 'academic_feedback',
+      isUrgent: false,
+      readStatus: true,
+      readAt: new Date('2026-11-22T12:00:00Z'),
+      createdAt: new Date('2026-11-22T11:30:00Z')
+    }
+  ];
+};

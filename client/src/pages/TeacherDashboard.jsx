@@ -1,8 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { studentsAPI, attendanceAPI, riskAPI, interventionsAPI } from '../services/api';
+import { studentsAPI, attendanceAPI, riskAPI, interventionsAPI, communicationsAPI } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 import { Icon } from '../components/Icons';
 
 export const TeacherDashboard = () => {
+  const { currentUser } = useAuth();
+  const defaultClass = currentUser?.assignedClass ? String(currentUser.assignedClass) : '8';
+
+  const [selectedClass, setSelectedClass] = useState(defaultClass);
   const [students, setStudents] = useState([]);
   const [attendanceDate, setAttendanceDate] = useState(() => new Date().toISOString().split('T')[0]);
   const [rollCall, setRollCall] = useState({}); // { [studentId]: { status: 'present', notes: '' } }
@@ -21,15 +26,36 @@ export const TeacherDashboard = () => {
     followUpDate: ''
   });
 
+  // Direct Communication Modal
+  const [showMessageModal, setShowMessageModal] = useState(false);
+  const [targetStudentForMessage, setTargetStudentForMessage] = useState(null);
+  const [messageForm, setMessageForm] = useState({
+    title: '',
+    messageText: '',
+    category: 'attendance_alert',
+    isUrgent: false
+  });
+  const [isSendingMessage, setIsSendingMessage] = useState(false);
+
+  // Class Broadcast Modal
+  const [showBroadcastModal, setShowBroadcastModal] = useState(false);
+  const [broadcastForm, setBroadcastForm] = useState({
+    title: '',
+    messageText: '',
+    category: 'general_notice',
+    isUrgent: false
+  });
+  const [isSendingBroadcast, setIsSendingBroadcast] = useState(false);
+
   useEffect(() => {
     loadDashboardData();
-  }, [attendanceDate]);
+  }, [attendanceDate, selectedClass]);
 
   const loadDashboardData = async () => {
     setIsLoading(true);
     try {
       const [stuRes, attRes, riskRes] = await Promise.all([
-        studentsAPI.getStudents({ className: '8' }),
+        studentsAPI.getStudents({ className: selectedClass }),
         attendanceAPI.getRecords({ date: attendanceDate }),
         riskAPI.getAssessments()
       ]);
@@ -106,6 +132,78 @@ export const TeacherDashboard = () => {
     }
   };
 
+  // Open Direct Message Modal
+  const handleOpenMessageModal = (student) => {
+    setTargetStudentForMessage(student);
+    const risk = riskMap[student.numericId];
+    const isConsecutiveAlert = risk?.hasCriticalAlert;
+
+    setMessageForm({
+      title: isConsecutiveAlert
+        ? `⚠️ Attendance Alert: ${student.fullName} Missed Consecutive Classes`
+        : `Academic Update: ${student.fullName}`,
+      messageText: isConsecutiveAlert
+        ? `Namaste ${student.parentName} ji, ${student.fullName} has missed multiple morning roll calls this week. Please call or visit the school so we can prevent learning loss.`
+        : `Namaste ${student.parentName} ji, please check this update regarding ${student.fullName}'s daily coursework and classroom participation.`,
+      category: isConsecutiveAlert ? 'attendance_alert' : 'academic_feedback',
+      isUrgent: Boolean(isConsecutiveAlert)
+    });
+    setShowMessageModal(true);
+  };
+
+  // Dispatch Direct Message
+  const handleSendMessage = async (e) => {
+    e.preventDefault();
+    if (!targetStudentForMessage) return;
+
+    setIsSendingMessage(true);
+    try {
+      await communicationsAPI.sendMessage({
+        studentId: targetStudentForMessage.numericId,
+        title: messageForm.title,
+        messageText: messageForm.messageText,
+        category: messageForm.category,
+        isUrgent: messageForm.isUrgent
+      });
+      setShowMessageModal(false);
+      setSaveMessage({
+        type: 'success',
+        text: `✓ Direct notice dispatched to ${targetStudentForMessage.parentName} (Parent of ${targetStudentForMessage.fullName})!`
+      });
+      setTimeout(() => setSaveMessage(null), 4000);
+    } catch (err) {
+      alert(`Failed to send communication: ${err.message}`);
+    } finally {
+      setIsSendingMessage(false);
+    }
+  };
+
+  // Dispatch Broadcast Message
+  const handleSendBroadcast = async (e) => {
+    e.preventDefault();
+    setIsSendingBroadcast(true);
+
+    try {
+      const res = await communicationsAPI.broadcastToClass({
+        classLevel: selectedClass,
+        title: broadcastForm.title,
+        messageText: broadcastForm.messageText,
+        category: broadcastForm.category,
+        isUrgent: broadcastForm.isUrgent
+      });
+      setShowBroadcastModal(false);
+      setSaveMessage({
+        type: 'success',
+        text: `✓ Class announcement delivered to all ${res.count || 'all'} parents of Class ${selectedClass}!`
+      });
+      setTimeout(() => setSaveMessage(null), 4000);
+    } catch (err) {
+      alert(`Failed to broadcast notice: ${err.message}`);
+    } finally {
+      setIsSendingBroadcast(false);
+    }
+  };
+
   const handleOpenInterventionModal = (student) => {
     setTargetStudentForIntervention(student);
     const risk = riskMap[student.numericId];
@@ -157,21 +255,56 @@ export const TeacherDashboard = () => {
       {/* Page Header */}
       <div className="dashboard-top-header">
         <div>
-          <h2>👨‍🏫 Class 8 Roll Call & Daily Monitoring</h2>
+          <h2>👨‍🏫 Class {selectedClass} Roll Call & Daily Monitoring</h2>
           <p className="text-sm text-muted">
-            Zilla Parishad High School, Dahiwadi • Class Teacher: S. Deshmukh
+            {currentUser?.schoolName || 'Zilla Parishad High School, Dahiwadi'} • Class Teacher: {currentUser?.fullName || 'S. Deshmukh'}
           </p>
         </div>
 
-        <div className="date-picker-wrap">
-          <label htmlFor="rollDate" className="text-xs font-semibold mr-2">Instructional Date:</label>
-          <input
-            id="rollDate"
-            type="date"
-            className="form-control date-input"
-            value={attendanceDate}
-            onChange={(e) => setAttendanceDate(e.target.value)}
-          />
+        <div className="flex items-center gap-2 flex-wrap">
+          {/* Class Selector Dropdown */}
+          <div className="flex items-center gap-1">
+            <span className="text-xs font-bold text-muted">Class:</span>
+            <select
+              className="form-control"
+              value={selectedClass}
+              onChange={(e) => setSelectedClass(e.target.value)}
+              style={{ minWidth: '100px', fontWeight: 'bold' }}
+            >
+              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(c => (
+                <option key={c} value={String(c)}>Class {c}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="date-picker-wrap">
+            <label htmlFor="rollDate" className="text-xs font-semibold mr-1">Date:</label>
+            <input
+              id="rollDate"
+              type="date"
+              className="form-control date-input"
+              value={attendanceDate}
+              onChange={(e) => setAttendanceDate(e.target.value)}
+            />
+          </div>
+
+          {/* Broadcast to Class Button */}
+          <button
+            type="button"
+            className="btn btn-outline btn-sm"
+            onClick={() => {
+              setBroadcastForm({
+                title: `Class ${selectedClass} Notice: `,
+                messageText: '',
+                category: 'general_notice',
+                isUrgent: false
+              });
+              setShowBroadcastModal(true);
+            }}
+            title="Broadcast announcement to all parents of Class"
+          >
+            <Icon name="phone" size={14} /> Broadcast Notice
+          </button>
         </div>
       </div>
 
@@ -211,7 +344,7 @@ export const TeacherDashboard = () => {
         <div className="section-card-header">
           <div className="flex items-center gap-2">
             <Icon name="calendar" size={18} color="#059669" />
-            <h3>Daily Attendance Roll Call Matrix ({attendanceDate})</h3>
+            <h3>Class {selectedClass} Roll Call Matrix ({attendanceDate})</h3>
           </div>
           <button
             className="btn btn-primary"
@@ -226,7 +359,7 @@ export const TeacherDashboard = () => {
         {isLoading ? (
           <div className="portal-loading-state">
             <div className="spinner"></div>
-            <p>Fetching student records...</p>
+            <p>Fetching Class {selectedClass} students...</p>
           </div>
         ) : (
           <div className="table-responsive">
@@ -234,11 +367,11 @@ export const TeacherDashboard = () => {
               <thead>
                 <tr>
                   <th>Roll #</th>
-                  <th>Student Name</th>
+                  <th>Student & Guardian</th>
                   <th>Attendance Status Toggle</th>
                   <th>Risk Status & Alerts</th>
                   <th>Daily Note / Reason</th>
-                  <th>Proactive Action</th>
+                  <th>ERP Interaction</th>
                 </tr>
               </thead>
               <tbody>
@@ -319,16 +452,28 @@ export const TeacherDashboard = () => {
                         />
                       </td>
 
-                      {/* Action */}
+                      {/* Proactive ERP Action Buttons */}
                       <td>
-                        <button
-                          type="button"
-                          className="btn btn-outline btn-sm"
-                          onClick={() => handleOpenInterventionModal(stu)}
-                          title="Record Parent Call or Home Visit"
-                        >
-                          <Icon name="teacher" size={13} /> Intervene
-                        </button>
+                        <div className="flex items-center gap-1">
+                          <button
+                            type="button"
+                            className="btn btn-primary btn-sm"
+                            onClick={() => handleOpenMessageModal(stu)}
+                            title="Dispatch real-time notice to guardian"
+                            style={{ padding: '0.3rem 0.55rem', fontSize: '0.78rem' }}
+                          >
+                            <Icon name="phone" size={12} /> Message
+                          </button>
+                          <button
+                            type="button"
+                            className="btn btn-outline btn-sm"
+                            onClick={() => handleOpenInterventionModal(stu)}
+                            title="Record formal intervention record"
+                            style={{ padding: '0.3rem 0.55rem', fontSize: '0.78rem' }}
+                          >
+                            <Icon name="teacher" size={12} /> Log
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );
@@ -338,6 +483,185 @@ export const TeacherDashboard = () => {
           </div>
         )}
       </div>
+
+      {/* Direct Teacher-Parent Notice Modal */}
+      {showMessageModal && targetStudentForMessage && (
+        <div className="modal-backdrop" onClick={() => setShowMessageModal(false)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <div className="flex items-center gap-2">
+                <Icon name="phone" size={18} color="#4f46e5" />
+                <h3 className="font-bold">
+                  Dispatch Notice to {targetStudentForMessage.parentName} (Parent of {targetStudentForMessage.fullName})
+                </h3>
+              </div>
+              <button className="btn-icon" onClick={() => setShowMessageModal(false)}>
+                <Icon name="x-circle" size={18} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSendMessage}>
+              <div className="modal-body">
+                <div className="form-group">
+                  <label>Message Category</label>
+                  <select
+                    className="form-control"
+                    value={messageForm.category}
+                    onChange={(e) => setMessageForm({ ...messageForm, category: e.target.value })}
+                  >
+                    <option value="attendance_alert">⚠️ Attendance Warning & Consecutive Absence</option>
+                    <option value="academic_feedback">🌟 Academic Feedback & CCE Marks</option>
+                    <option value="homework">📚 Homework & Exam Revision Packet</option>
+                    <option value="urgent_call">🚨 Urgent Parent Call Requested</option>
+                    <option value="general_notice">ℹ️ General Classroom Notice</option>
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label>Notice Subject</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    value={messageForm.title}
+                    onChange={(e) => setMessageForm({ ...messageForm, title: e.target.value })}
+                    required
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Message to Parent</label>
+                  <textarea
+                    className="form-control"
+                    rows="4"
+                    value={messageForm.messageText}
+                    onChange={(e) => setMessageForm({ ...messageForm, messageText: e.target.value })}
+                    required
+                  ></textarea>
+                </div>
+
+                <div className="form-group flex items-center gap-2 mt-2">
+                  <input
+                    type="checkbox"
+                    id="urgentNoticeCheck"
+                    checked={messageForm.isUrgent}
+                    onChange={(e) => setMessageForm({ ...messageForm, isUrgent: e.target.checked })}
+                  />
+                  <label htmlFor="urgentNoticeCheck" className="text-sm font-semibold" style={{ margin: 0, cursor: 'pointer' }}>
+                    🚨 Highlight as Urgent Notice (Shows alert pill on Parent Portal)
+                  </label>
+                </div>
+              </div>
+
+              <div className="modal-footer">
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => setShowMessageModal(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="btn btn-primary"
+                  disabled={isSendingMessage}
+                >
+                  {isSendingMessage ? 'Dispatching...' : 'Dispatch Notice to Parent'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Class Broadcast Announcement Modal */}
+      {showBroadcastModal && (
+        <div className="modal-backdrop" onClick={() => setShowBroadcastModal(false)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <div className="flex items-center gap-2">
+                <Icon name="phone" size={18} color="#059669" />
+                <h3 className="font-bold">
+                  Broadcast Notice to All Class {selectedClass} Parents
+                </h3>
+              </div>
+              <button className="btn-icon" onClick={() => setShowBroadcastModal(false)}>
+                <Icon name="x-circle" size={18} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSendBroadcast}>
+              <div className="modal-body">
+                <div className="form-group">
+                  <label>Notice Category</label>
+                  <select
+                    className="form-control"
+                    value={broadcastForm.category}
+                    onChange={(e) => setBroadcastForm({ ...broadcastForm, category: e.target.value })}
+                  >
+                    <option value="general_notice">ℹ️ General Classroom / School Notice</option>
+                    <option value="homework">📚 Class-Wide Homework & Revision Packet</option>
+                    <option value="attendance_alert">⚠️ Monsoon Weather / Route Alert</option>
+                    <option value="academic_feedback">📝 Unit Test & Exam Announcement</option>
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label>Announcement Title</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    placeholder="e.g. Unit Test 2 Schedule & Revision Packet"
+                    value={broadcastForm.title}
+                    onChange={(e) => setBroadcastForm({ ...broadcastForm, title: e.target.value })}
+                    required
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Announcement Body</label>
+                  <textarea
+                    className="form-control"
+                    rows="4"
+                    placeholder="Type notice message here. It will be duplicated to every student's parent feed in Class..."
+                    value={broadcastForm.messageText}
+                    onChange={(e) => setBroadcastForm({ ...broadcastForm, messageText: e.target.value })}
+                    required
+                  ></textarea>
+                </div>
+
+                <div className="form-group flex items-center gap-2 mt-2">
+                  <input
+                    type="checkbox"
+                    id="broadcastUrgentCheck"
+                    checked={broadcastForm.isUrgent}
+                    onChange={(e) => setBroadcastForm({ ...broadcastForm, isUrgent: e.target.checked })}
+                  />
+                  <label htmlFor="broadcastUrgentCheck" className="text-sm font-semibold" style={{ margin: 0, cursor: 'pointer' }}>
+                    🚨 Mark as High-Priority Class Broadcast
+                  </label>
+                </div>
+              </div>
+
+              <div className="modal-footer">
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => setShowBroadcastModal(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="btn btn-primary"
+                  disabled={isSendingBroadcast}
+                >
+                  {isSendingBroadcast ? 'Broadcasting...' : 'Broadcast to All Parents'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Intervention Recording Modal */}
       {showInterventionModal && targetStudentForIntervention && (

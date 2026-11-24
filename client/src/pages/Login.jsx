@@ -204,17 +204,23 @@ export const Login = ({ initialRole = 'teacher', onLoginSuccess }) => {
     <div className="login-page-wrapper">
       {/* Top Banner / District Badge */}
       <div className="login-top-bar">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <span className="text-xl">🌾</span>
-          <span className="font-bold">GramShiksha Remote Monitoring System</span>
-          <span className="text-muted text-xs">• Zilla Parishad Satara / RTE Cell</span>
+          <span className="font-bold">GramShiksha Digital Campus ERP</span>
+          <span className="text-muted text-xs">• Govt. of Maharashtra & ZP Satara Education Wing</span>
+          <span className="badge badge-outline" style={{ fontSize: '0.7rem', padding: '1px 6px' }}>AY 2026–2027</span>
         </div>
-        <button
-          className="btn-link text-xs flex items-center gap-1"
-          onClick={() => setShowHelpdesk(true)}
-        >
-          <Icon name="phone" size={12} /> District Helpdesk
-        </button>
+        <div className="flex items-center gap-3">
+          <span className="text-xs text-muted flex items-center gap-1">
+            <Icon name="wifi" size={12} color="#059669" /> 2G/3G Ready
+          </span>
+          <button
+            className="btn-link text-xs flex items-center gap-1"
+            onClick={() => setShowHelpdesk(true)}
+          >
+            <Icon name="phone" size={12} /> District Helpdesk
+          </button>
+        </div>
       </div>
 
       <div className="login-main-card">
@@ -256,6 +262,34 @@ export const Login = ({ initialRole = 'teacher', onLoginSuccess }) => {
             </div>
           )}
         </div>
+
+        {/* Distinct Class Teacher Presets (Shown in Teacher Tab) */}
+        {authMode === 'login' && activeRoleTab === 'teacher' && (
+          <div className="persona-quick-switcher" style={{ marginTop: 0, marginBottom: '1.25rem', borderTop: 'none', background: '#f8fafc', padding: '0.75rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)' }}>
+            <span className="quick-switch-label">Select Dedicated Class Teacher:</span>
+            <div className="quick-switch-buttons">
+              {[
+                { username: 'teacher_class1', label: 'Sunita Gaikwad', tag: 'Class 1' },
+                { username: 'teacher_class3', label: 'Ramesh Patil', tag: 'Class 3' },
+                { username: 'teacher_class5', label: 'Vandana Shinde', tag: 'Class 5' },
+                { username: 'teacher', label: 'S. Deshmukh', tag: 'Class 8 (Default)' },
+                { username: 'teacher_class10', label: 'Anand Kulkarni', tag: 'Class 10' }
+              ].map((t) => {
+                const isSelected = username === t.username;
+                return (
+                  <button
+                    key={t.username}
+                    type="button"
+                    className={`btn-chip ${isSelected ? 'chip-active' : ''}`}
+                    onClick={() => selectSpecificDemo(t.username)}
+                  >
+                    <span>👨‍🏫 {t.label} ({t.tag})</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {/* Distinct 1-to-1 Parent Selector Presets (Shown in Parent Tab) */}
         {authMode === 'login' && activeRoleTab === 'parent' && (
@@ -335,9 +369,38 @@ export const Login = ({ initialRole = 'teacher', onLoginSuccess }) => {
         )}
 
         {(localError || authError) && (
-          <div className="login-error-alert">
-            <Icon name="alert-triangle" size={16} />
-            <span>{localError || authError}</span>
+          <div className="login-error-alert" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '0.5rem' }}>
+            <div className="flex items-center gap-2">
+              <Icon name="alert-triangle" size={16} />
+              <span>{localError || authError}</span>
+            </div>
+            {String(localError || authError).includes('Invalid username or password') && (
+              <div className="text-xs" style={{ color: '#991b1b', lineHeight: 1.4, width: '100%' }}>
+                <strong>💡 Quick Tip:</strong> The password for all accounts is <code style={{ background: '#fee2e2', padding: '1px 5px', borderRadius: '3px', fontWeight: 'bold' }}>password123</code>.
+                If this is a fresh cloud database on Render/Atlas,{' '}
+                <button
+                  type="button"
+                  style={{ textDecoration: 'underline', background: 'none', border: 'none', color: '#b91c1c', fontWeight: 'bold', cursor: 'pointer', padding: 0 }}
+                  onClick={async () => {
+                    try {
+                      setLocalError('Initializing demo database on cloud server...');
+                      await authAPI.seedDemo();
+                      setRegSuccessMsg('✅ Demo cloud database successfully initialized! You can now sign in with password: password123');
+                      setLocalError(null);
+                    } catch (e) {
+                      setLocalError('Database initialization notice: ' + (e.message || 'Check backend status'));
+                    }
+                  }}
+                >
+                  ⚡ Click here to seed/reset demo cloud database
+                </button>.
+              </div>
+            )}
+            {String(localError || authError).includes('404') && (
+              <div className="text-xs" style={{ color: '#991b1b', lineHeight: 1.4 }}>
+                <strong>💡 Tip (404 Error):</strong> Frontend cannot reach the backend API. Please make sure <code>VITE_API_URL</code> is saved in Vercel Project Settings ➔ Environment Variables, and then trigger a <strong>Redeploy</strong> from the Deployments tab.
+              </div>
+            )}
           </div>
         )}
 
@@ -587,21 +650,87 @@ export const Login = ({ initialRole = 'teacher', onLoginSuccess }) => {
 
         {/* 1-Click Role Quick Bar */}
         <div className="persona-quick-switcher">
-          <span className="quick-switch-label">Test Persona Quick Switcher:</span>
-          <div className="quick-switch-buttons">
-            {Object.keys(roleCards).map((key) => (
-              <button
-                key={key}
-                type="button"
-                className={`btn-chip ${activeRoleTab === key ? 'chip-active' : ''}`}
-                onClick={() => {
-                  window.location.hash = `#/login/${key}`;
-                  switchRoleDemo(key);
-                }}
-              >
-                {roleCards[key].badge}
-              </button>
-            ))}
+          <div className="flex justify-between items-center mb-1">
+            <span className="quick-switch-label">Instant Test Persona Quick Switcher:</span>
+            <button
+              type="button"
+              className="btn-link text-xs"
+              style={{ fontSize: '0.75rem', color: 'var(--primary)' }}
+              onClick={async () => {
+                try {
+                  setLocalError('Initializing demo database on cloud server...');
+                  await authAPI.seedDemo();
+                  setRegSuccessMsg('✅ Demo cloud database successfully initialized! All personas ready.');
+                  setLocalError(null);
+                } catch (e) {
+                  setLocalError('Database initialization notice: ' + (e.message || 'Check backend status'));
+                }
+              }}
+            >
+              ⚡ Re-seed Cloud DB
+            </button>
+          </div>
+          <div className="quick-switch-buttons" style={{ flexWrap: 'wrap', gap: '0.4rem' }}>
+            <button
+              type="button"
+              className={`btn-chip ${username === 'teacher' ? 'chip-active' : ''}`}
+              onClick={() => {
+                setActiveRoleTab('teacher');
+                selectSpecificDemo('teacher');
+              }}
+            >
+              👨‍🏫 Class 8 Teacher (S. Deshmukh)
+            </button>
+            <button
+              type="button"
+              className={`btn-chip ${username === 'teacher_class1' ? 'chip-active' : ''}`}
+              onClick={() => {
+                setActiveRoleTab('teacher');
+                selectSpecificDemo('teacher_class1');
+              }}
+            >
+              👨‍🏫 Class 1 Teacher (S. Gaikwad)
+            </button>
+            <button
+              type="button"
+              className={`btn-chip ${username === 'parent_asha' ? 'chip-active' : ''}`}
+              onClick={() => {
+                setActiveRoleTab('parent');
+                selectSpecificDemo('parent_asha');
+              }}
+            >
+              👨‍👩‍👧 Asha's Parent (Class 8)
+            </button>
+            <button
+              type="button"
+              className={`btn-chip ${username === 'parent_aarav' ? 'chip-active' : ''}`}
+              onClick={() => {
+                setActiveRoleTab('parent');
+                selectSpecificDemo('parent_aarav');
+              }}
+            >
+              👨‍👩‍👧 Aarav's Parent (Class 1)
+            </button>
+            <button
+              type="button"
+              className={`btn-chip ${username === 'headmaster' ? 'chip-active' : ''}`}
+              onClick={() => {
+                setActiveRoleTab('headmaster');
+                selectSpecificDemo('headmaster');
+              }}
+            >
+              🏫 Headmaster (Dr. K. Patil)
+            </button>
+            <button
+              type="button"
+              className={`btn-chip ${username === 'admin' ? 'chip-active' : ''}`}
+              onClick={() => {
+                setActiveRoleTab('admin');
+                selectSpecificDemo('admin');
+              }}
+            >
+              🏛️ District BEO (B. Shinde)
+            </button>
           </div>
         </div>
 

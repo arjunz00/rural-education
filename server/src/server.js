@@ -7,6 +7,7 @@ import { AcademicRecord } from './models/AcademicRecord.js';
 import { Intervention } from './models/Intervention.js';
 import { LearningResource } from './models/LearningResource.js';
 import { Quiz } from './models/Quiz.js';
+import { Communication } from './models/Communication.js';
 import {
   getSeedUsers,
   seedStudents,
@@ -14,7 +15,8 @@ import {
   seedAcademicRecords,
   seedInterventions,
   seedLearningResources,
-  seedQuizzes
+  seedQuizzes,
+  getSeedCommunications
 } from './seed/seedData.js';
 
 const PORT = process.env.PORT || 5000;
@@ -32,6 +34,9 @@ export const autoSeedIfEmpty = async () => {
       await Intervention.insertMany(seedInterventions);
       await LearningResource.insertMany(seedLearningResources);
       await Quiz.insertMany(seedQuizzes);
+      const teacherMap = {};
+      usersData.forEach(u => { teacherMap[u.username] = u; });
+      await Communication.insertMany(getSeedCommunications(teacherMap));
       console.log('[AutoSeed] Successfully auto-seeded demo dataset into database!');
     } else {
       console.log(`[AutoSeed] Database already populated (${userCount} users present).`);

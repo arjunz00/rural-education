@@ -20,6 +20,7 @@ export const LearningResourcesView = () => {
   const [resources, setResources] = useState([]);
   const [activeAudioResource, setActiveAudioResource] = useState(null);
   const [activeTextResource, setActiveTextResource] = useState(null);
+  const [activeTextbookResource, setActiveTextbookResource] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -117,8 +118,9 @@ export const LearningResourcesView = () => {
               onChange={(e) => setTypeFilter(e.target.value)}
             >
               <option value="All">All Formats</option>
-              <option value="audio">Audio Capsules (Spoken)</option>
-              <option value="text">Text Notes</option>
+              <option value="textbook">📖 Digital Textbooks (Balbharati)</option>
+              <option value="audio">🎧 Audio Capsules (Spoken)</option>
+              <option value="text">📄 Text Notes & Revision</option>
             </select>
           </div>
         </div>
@@ -168,9 +170,9 @@ export const LearningResourcesView = () => {
               <div key={res._id || idx} className="resource-card-full">
                 <div className="resource-card-header">
                   <div className="flex items-center gap-2">
-                    <span className={`badge ${res.resourceType === 'audio' ? 'badge-audio' : 'badge-text'}`}>
-                      <Icon name={res.resourceType === 'audio' ? 'volume' : 'file-text'} size={14} />
-                      {res.resourceType === 'audio' ? '🎧 Audio Capsule' : '📄 Text Notes'}
+                    <span className={`badge ${res.resourceType === 'audio' ? 'badge-audio' : res.resourceType === 'textbook' ? 'badge-primary' : 'badge-text'}`}>
+                      <Icon name={res.resourceType === 'audio' ? 'volume' : res.resourceType === 'textbook' ? 'book' : 'file-text'} size={14} />
+                      {res.resourceType === 'audio' ? '🎧 Audio Capsule' : res.resourceType === 'textbook' ? '📖 Balbharati Textbook' : '📄 Text Notes'}
                     </span>
                     <span className="class-badge-pill" style={{ borderColor: 'var(--primary)', color: 'var(--primary)' }}>
                       Class {res.classLevel}
@@ -183,6 +185,11 @@ export const LearningResourcesView = () => {
                 </div>
 
                 <h3 className="resource-title">{res.title}</h3>
+                {res.authorOrBoard && (
+                  <p className="text-xs text-muted" style={{ fontStyle: 'italic', marginBottom: '0.25rem' }}>
+                    🏛️ {res.authorOrBoard}
+                  </p>
+                )}
                 <p className="resource-desc text-sm text-muted">{res.description}</p>
 
                 <div className="resource-actions">
@@ -203,6 +210,13 @@ export const LearningResourcesView = () => {
                         <Icon name="download" size={14} /> ⬇ Download ({res.downloadSize})
                       </button>
                     </div>
+                  ) : res.resourceType === 'textbook' ? (
+                    <button
+                      className="btn btn-primary btn-sm"
+                      onClick={() => setActiveTextbookResource(res)}
+                    >
+                      <Icon name="book" size={14} /> 📖 Read Chapter
+                    </button>
                   ) : (
                     <button
                       className="btn btn-outline btn-sm"
@@ -253,6 +267,80 @@ export const LearningResourcesView = () => {
               <button className="btn btn-secondary" onClick={() => setActiveTextResource(null)}>
                 Close Reader
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Digital Textbook / Balbharati E-Book Reader Modal */}
+      {activeTextbookResource && (
+        <div className="modal-backdrop" onClick={() => setActiveTextbookResource(null)}>
+          <div className="modal-content" style={{ maxWidth: '780px', maxHeight: '88vh' }} onClick={e => e.stopPropagation()}>
+            <div className="modal-header" style={{ borderBottom: '2px solid var(--primary-light)' }}>
+              <div className="flex items-center gap-2">
+                <Icon name="book" size={20} color="#4f46e5" />
+                <div>
+                  <h3 className="font-bold" style={{ margin: 0 }}>{activeTextbookResource.title}</h3>
+                  <span className="text-xs text-muted">
+                    {activeTextbookResource.authorOrBoard || 'Maharashtra State Bureau of Textbook Production (Balbharati)'}
+                  </span>
+                </div>
+              </div>
+              <button className="btn-icon" onClick={() => setActiveTextbookResource(null)}>
+                <Icon name="x-circle" size={18} />
+              </button>
+            </div>
+            <div className="modal-body" style={{ overflowY: 'auto' }}>
+              <div className="flex items-center justify-between flex-wrap gap-2 mb-3 pb-2 border-b">
+                <div className="flex items-center gap-2">
+                  <span className="badge badge-primary">{activeTextbookResource.subject}</span>
+                  <span className="class-badge-pill font-bold">Class {activeTextbookResource.classLevel}</span>
+                  <span className="badge badge-outline">Standard Curriculum</span>
+                </div>
+                <div className="flex items-center gap-2 text-xs text-muted">
+                  <span>💾 {activeTextbookResource.downloadSize}</span>
+                  <span>•</span>
+                  <span>⏱️ Read time: {activeTextbookResource.duration}</span>
+                </div>
+              </div>
+
+              <div
+                className="textbook-reader-content"
+                style={{
+                  whiteSpace: 'pre-wrap',
+                  lineHeight: 1.7,
+                  fontSize: '0.95rem',
+                  color: 'var(--text-main)',
+                  padding: '1rem',
+                  backgroundColor: '#fcfcfd',
+                  borderRadius: 'var(--radius-sm)',
+                  border: '1px solid var(--border-color)',
+                  fontFamily: 'serif'
+                }}
+              >
+                {activeTextbookResource.content}
+              </div>
+            </div>
+            <div className="modal-footer flex justify-between items-center">
+              <span className="text-xs text-muted">
+                Offline-ready • NCERT & State Board Aligned
+              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  className="btn btn-outline"
+                  onClick={() => window.print()}
+                >
+                  <Icon name="printer" size={14} /> Print Chapter
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={() => setActiveTextbookResource(null)}
+                >
+                  Close Reader
+                </button>
+              </div>
             </div>
           </div>
         </div>
