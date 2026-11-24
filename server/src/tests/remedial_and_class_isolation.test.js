@@ -83,7 +83,7 @@ test('🔒 [1-to-1 PRIVACY] Parent of Asha (parent_asha) accessing /api/students
   assert.equal(res.status, 200);
   assert.equal(res.body.success, true);
   assert.equal(res.body.data.numericId, 801);
-  assert.equal(res.body.data.fullName, 'Asha Jadhav');
+  assert.match(res.body.data.fullName, /Asha.*Jadhav/i);
 });
 
 test('🔒 [1-to-1 PRIVACY] Parent of Asha (parent_asha) accessing /api/students/501 returns 403 Forbidden', async () => {

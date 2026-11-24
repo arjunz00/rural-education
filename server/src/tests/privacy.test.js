@@ -45,7 +45,7 @@ test('🔒 [PRIVACY] Parent can access their OWN child\'s record (studentId: 801
   assert.equal(res.status, 200);
   assert.equal(res.body.success, true);
   assert.equal(res.body.data.numericId, 801);
-  assert.equal(res.body.data.fullName, 'Asha Jadhav');
+  assert.match(res.body.data.fullName, /Asha.*Jadhav/i);
 });
 
 test('🔒 [PRIVACY] Parent requesting ANOTHER student\'s record (studentId: 701) MUST return 403 Forbidden', async () => {

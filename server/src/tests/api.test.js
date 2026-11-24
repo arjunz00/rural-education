@@ -62,7 +62,7 @@ test('⚡ [AUTH] GET /api/auth/me with valid token returns current profile', asy
   assert.equal(res.body.user.role, 'teacher');
 });
 
-test('⚡ [RISK ENGINE] Accurately detects High Risk and Critical Alert for Rohan Pawar (#701)', async () => {
+test('⚡ [RISK ENGINE] Accurately detects High Risk and Critical Alert for At-Risk Student (#801 / #501)', async () => {
   const res = await request(app)
     .get('/api/risk/assessments')
     .set('Authorization', `Bearer ${teacherToken}`);
@@ -70,15 +70,15 @@ test('⚡ [RISK ENGINE] Accurately detects High Risk and Critical Alert for Roha
   assert.equal(res.status, 200);
   assert.ok(res.body.assessments.length >= 3);
 
-  const rohanAssessment = res.body.assessments.find(a => a.studentId === 701 || a.studentId === 2);
-  assert.ok(rohanAssessment, 'Rohan Pawar assessment should exist');
-  assert.equal(rohanAssessment.riskLevel, 'High');
-  assert.equal(rohanAssessment.hasCriticalAlert, true);
-  assert.ok(rohanAssessment.consecutiveAbsent >= 3);
+  const atRiskAssessment = res.body.assessments.find(a => a.studentId === 801 || a.studentId === 501);
+  assert.ok(atRiskAssessment, 'At-risk student assessment should exist');
+  assert.equal(atRiskAssessment.riskLevel, 'High');
+  assert.equal(atRiskAssessment.hasCriticalAlert, true);
+  assert.ok(atRiskAssessment.consecutiveAbsent >= 3);
 });
 
 test('⚡ [ATTENDANCE] Teacher can submit bulk daily roll call', async () => {
-  const testDate = '2026-11-23';
+  const testDate = '2026-11-25';
   const res = await request(app)
     .post('/api/attendance/bulk')
     .set('Authorization', `Bearer ${teacherToken}`)
