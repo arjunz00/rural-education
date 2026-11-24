@@ -1,7 +1,19 @@
 import { User } from '../models/User.js';
 import { Student } from '../models/Student.js';
+import { Attendance } from '../models/Attendance.js';
+import { AcademicRecord } from '../models/AcademicRecord.js';
+import { Intervention } from '../models/Intervention.js';
+import { LearningResource } from '../models/LearningResource.js';
 import { generateToken } from '../middleware/auth.js';
 import { FAMILY_ROLES } from '../config/constants.js';
+import {
+  getSeedUsers,
+  seedStudents,
+  getSeedAttendance,
+  seedAcademicRecords,
+  seedInterventions,
+  seedLearningResources
+} from '../seed/seedData.js';
 
 export const login = async (req, res, next) => {
   try {
@@ -122,4 +134,43 @@ export const getDemoAccounts = async (req, res) => {
       { role: 'student', username: 'student', name: 'Asha Jadhav', designation: 'Student (Class 8, #1)' }
     ]
   });
+};
+
+export const seedDemoDatabase = async (req, res, next) => {
+  try {
+    const userCount = await User.countDocuments();
+    if (userCount > 0 && !req.query.force) {
+      return res.status(200).json({
+        success: true,
+        message: `Database already seeded with ${userCount} users. Pass ?force=true to wipe and re-seed.`,
+        userCount
+      });
+    }
+
+    await Promise.all([
+      User.deleteMany({}),
+      Student.deleteMany({}),
+      Attendance.deleteMany({}),
+      AcademicRecord.deleteMany({}),
+      Intervention.deleteMany({}),
+      LearningResource.deleteMany({})
+    ]);
+
+    const usersData = await getSeedUsers();
+    await User.insertMany(usersData);
+    await Student.insertMany(seedStudents);
+    await Attendance.insertMany(getSeedAttendance());
+    await AcademicRecord.insertMany(seedAcademicRecords);
+    await Intervention.insertMany(seedInterventions);
+    await LearningResource.insertMany(seedLearningResources);
+
+    return res.status(200).json({
+      success: true,
+      message: 'Demo accounts and datasets populated successfully!',
+      users: ['teacher', 'headmaster', 'admin', 'parent', 'student'],
+      defaultPassword: 'password123'
+    });
+  } catch (err) {
+    next(err);
+  }
 };
