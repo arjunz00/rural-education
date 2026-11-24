@@ -44,6 +44,18 @@ export const LearningResourcesView = () => {
     }
   };
 
+  const handleDirectDownload = (res) => {
+    const downloadUrl = res.downloadUrl || resourcesAPI.getDownloadUrl(res._id);
+    const safeTitle = (res.title || 'Lesson').replace(/[^a-zA-Z0-9]/g, '_');
+    const filename = `GramShiksha_Class${res.classLevel}_${res.subject}_${safeTitle}.mp3`;
+    const a = document.createElement('a');
+    a.href = downloadUrl;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  };
+
   const filtered = resources.filter(r => {
     if (subjectFilter !== 'All' && r.subject !== subjectFilter) return false;
     // Strict isolation enforcement: resource must belong to selectedClass
@@ -158,15 +170,15 @@ export const LearningResourcesView = () => {
                   <div className="flex items-center gap-2">
                     <span className={`badge ${res.resourceType === 'audio' ? 'badge-audio' : 'badge-text'}`}>
                       <Icon name={res.resourceType === 'audio' ? 'volume' : 'file-text'} size={14} />
-                      {res.resourceType.toUpperCase()}
+                      {res.resourceType === 'audio' ? '🎧 Audio Capsule' : '📄 Text Notes'}
                     </span>
                     <span className="class-badge-pill" style={{ borderColor: 'var(--primary)', color: 'var(--primary)' }}>
                       Class {res.classLevel}
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="file-size-pill font-mono">{res.downloadSize}</span>
-                    <span className="duration-pill text-xs text-muted">{res.duration}</span>
+                    <span className="file-size-pill font-mono">💾 {res.downloadSize}</span>
+                    <span className="duration-pill text-xs text-muted">⏱️ {res.duration}</span>
                   </div>
                 </div>
 
@@ -176,12 +188,21 @@ export const LearningResourcesView = () => {
                 <div className="resource-actions">
                   <span className="subject-tag font-semibold text-primary">{res.subject}</span>
                   {res.resourceType === 'audio' ? (
-                    <button
-                      className="btn btn-primary btn-sm"
-                      onClick={() => setActiveAudioResource(res)}
-                    >
-                      <Icon name="volume" size={14} /> Listen ({res.duration})
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        className="btn btn-primary btn-sm"
+                        onClick={() => setActiveAudioResource(res)}
+                      >
+                        <Icon name="volume" size={14} /> ▶ Listen Lesson
+                      </button>
+                      <button
+                        className="btn btn-outline btn-sm"
+                        onClick={() => handleDirectDownload(res)}
+                        title="Download audio file for offline village study"
+                      >
+                        <Icon name="download" size={14} /> ⬇ Download ({res.downloadSize})
+                      </button>
+                    </div>
                   ) : (
                     <button
                       className="btn btn-outline btn-sm"

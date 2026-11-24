@@ -68,6 +68,12 @@ app.all('/api/*', (req, res) => {
   });
 });
 
+// Static public files (audio assets)
+const serverPublicPath = path.resolve(__dirname, '../public');
+if (fs.existsSync(serverPublicPath)) {
+  app.use('/public', express.static(serverPublicPath));
+}
+
 // In production, serve the compiled React SPA static assets
 if (fs.existsSync(clientDistPath)) {
   app.use(express.static(clientDistPath));

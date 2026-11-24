@@ -29,6 +29,18 @@ export const ParentStudentPortal = ({ subTab = 'all' }) => {
   const [showPrintModal, setShowPrintModal] = useState(false);
   const [selectedAudioResource, setSelectedAudioResource] = useState(null);
 
+  const handleDirectDownload = (res) => {
+    const downloadUrl = res.downloadUrl || resourcesAPI.getDownloadUrl(res._id);
+    const safeTitle = (res.title || 'Lesson').replace(/[^a-zA-Z0-9]/g, '_');
+    const filename = `GramShiksha_Class${res.classLevel || 8}_${res.subject}_${safeTitle}.mp3`;
+    const a = document.createElement('a');
+    a.href = downloadUrl;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  };
+
   useEffect(() => {
     const fetchPortalData = async () => {
       if (!linkedStudentId) {
@@ -392,12 +404,21 @@ export const ParentStudentPortal = ({ subTab = 'all' }) => {
                 <div className="resource-card-footer">
                   <span className="text-xs font-semibold text-primary">{res.subject}</span>
                   {res.resourceType === 'audio' ? (
-                    <button
-                      className="btn btn-primary btn-sm"
-                      onClick={() => setSelectedAudioResource(res)}
-                    >
-                      <Icon name="volume" size={14} /> Listen ({res.duration})
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        className="btn btn-primary btn-sm"
+                        onClick={() => setSelectedAudioResource(res)}
+                      >
+                        <Icon name="volume" size={14} /> ▶ Listen Lesson
+                      </button>
+                      <button
+                        className="btn btn-outline btn-sm"
+                        onClick={() => handleDirectDownload(res)}
+                        title="Download audio file for offline village study"
+                      >
+                        <Icon name="download" size={14} /> ⬇ Download
+                      </button>
+                    </div>
                   ) : (
                     <button
                       className="btn btn-outline btn-sm"

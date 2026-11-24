@@ -53,6 +53,16 @@ const learningResourceSchema = new mongoose.Schema(
       type: String,
       default: '—'
     },
+    durationSeconds: {
+      type: Number,
+      default: 180
+    },
+    audioUrl: {
+      type: String
+    },
+    downloadUrl: {
+      type: String
+    },
     createdAt: {
       type: Date,
       default: Date.now

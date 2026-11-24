@@ -22,6 +22,8 @@ before(async () => {
 });
 
 after(async () => {
+  const { Attendance } = await import('../models/Attendance.js');
+  await Attendance.deleteMany({ attendanceDate: '2026-11-25' });
   await disconnectDB();
 });
 
@@ -70,7 +72,7 @@ test('⚡ [RISK ENGINE] Accurately detects High Risk and Critical Alert for At-R
   assert.equal(res.status, 200);
   assert.ok(res.body.assessments.length >= 3);
 
-  const atRiskAssessment = res.body.assessments.find(a => a.studentId === 801 || a.studentId === 501);
+  const atRiskAssessment = res.body.assessments.find(a => a.studentId === 801);
   assert.ok(atRiskAssessment, 'At-risk student assessment should exist');
   assert.equal(atRiskAssessment.riskLevel, 'High');
   assert.equal(atRiskAssessment.hasCriticalAlert, true);

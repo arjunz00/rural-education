@@ -154,7 +154,9 @@ export const resourcesAPI = {
   create: (data) => apiRequest('/resources', {
     method: 'POST',
     body: JSON.stringify(data)
-  })
+  }),
+  getAudioUrl: (id) => `${API_BASE}/resources/${id}/audio`,
+  getDownloadUrl: (id) => `${API_BASE}/resources/${id}/download`
 };
 
 export const quizzesAPI = {
