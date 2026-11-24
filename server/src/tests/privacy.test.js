@@ -37,20 +37,20 @@ after(async () => {
   await disconnectDB();
 });
 
-test('🔒 [PRIVACY] Parent can access their OWN child\'s record (studentId: 1)', async () => {
+test('🔒 [PRIVACY] Parent can access their OWN child\'s record (studentId: 801)', async () => {
   const res = await request(app)
-    .get('/api/students/1')
+    .get('/api/students/801')
     .set('Authorization', `Bearer ${parentToken}`);
 
   assert.equal(res.status, 200);
   assert.equal(res.body.success, true);
-  assert.equal(res.body.data.numericId, 1);
+  assert.equal(res.body.data.numericId, 801);
   assert.equal(res.body.data.fullName, 'Asha Jadhav');
 });
 
-test('🔒 [PRIVACY] Parent requesting ANOTHER student\'s record (studentId: 2) MUST return 403 Forbidden', async () => {
+test('🔒 [PRIVACY] Parent requesting ANOTHER student\'s record (studentId: 701) MUST return 403 Forbidden', async () => {
   const res = await request(app)
-    .get('/api/students/2')
+    .get('/api/students/701')
     .set('Authorization', `Bearer ${parentToken}`);
 
   assert.equal(res.status, 403);
@@ -58,9 +58,9 @@ test('🔒 [PRIVACY] Parent requesting ANOTHER student\'s record (studentId: 2) 
   assert.equal(res.body.code, 'STUDENT_DATA_PRIVACY_RESTRICTION');
 });
 
-test('🔒 [PRIVACY] Parent requesting another student\'s attendance (/api/students/2/attendance) MUST return 403 Forbidden', async () => {
+test('🔒 [PRIVACY] Parent requesting another student\'s attendance (/api/students/701/attendance) MUST return 403 Forbidden', async () => {
   const res = await request(app)
-    .get('/api/students/2/attendance')
+    .get('/api/students/701/attendance')
     .set('Authorization', `Bearer ${parentToken}`);
 
   assert.equal(res.status, 403);
@@ -68,9 +68,9 @@ test('🔒 [PRIVACY] Parent requesting another student\'s attendance (/api/stude
   assert.equal(res.body.code, 'STUDENT_DATA_PRIVACY_RESTRICTION');
 });
 
-test('🔒 [PRIVACY] Parent requesting another student\'s academic marks (/api/students/2/academic) MUST return 403 Forbidden', async () => {
+test('🔒 [PRIVACY] Parent requesting another student\'s academic marks (/api/students/701/academic) MUST return 403 Forbidden', async () => {
   const res = await request(app)
-    .get('/api/students/2/academic')
+    .get('/api/students/701/academic')
     .set('Authorization', `Bearer ${parentToken}`);
 
   assert.equal(res.status, 403);
@@ -78,9 +78,9 @@ test('🔒 [PRIVACY] Parent requesting another student\'s academic marks (/api/s
   assert.equal(res.body.code, 'STUDENT_DATA_PRIVACY_RESTRICTION');
 });
 
-test('🔒 [PRIVACY] Parent requesting another student\'s interventions (/api/students/2/interventions) MUST return 403 Forbidden', async () => {
+test('🔒 [PRIVACY] Parent requesting another student\'s interventions (/api/students/701/interventions) MUST return 403 Forbidden', async () => {
   const res = await request(app)
-    .get('/api/students/2/interventions')
+    .get('/api/students/701/interventions')
     .set('Authorization', `Bearer ${parentToken}`);
 
   assert.equal(res.status, 403);
@@ -88,9 +88,9 @@ test('🔒 [PRIVACY] Parent requesting another student\'s interventions (/api/st
   assert.equal(res.body.code, 'STUDENT_DATA_PRIVACY_RESTRICTION');
 });
 
-test('🔒 [PRIVACY] Student requesting ANOTHER student\'s record (studentId: 3) MUST return 403 Forbidden', async () => {
+test('🔒 [PRIVACY] Student requesting ANOTHER student\'s record (studentId: 301) MUST return 403 Forbidden', async () => {
   const res = await request(app)
-    .get('/api/students/3')
+    .get('/api/students/301')
     .set('Authorization', `Bearer ${studentToken}`);
 
   assert.equal(res.status, 403);
@@ -106,7 +106,7 @@ test('🔒 [PRIVACY] Parent GET /api/students returns ONLY their linked student 
   assert.equal(res.status, 200);
   assert.equal(res.body.count, 1);
   assert.equal(res.body.data.length, 1);
-  assert.equal(res.body.data[0].numericId, 1);
+  assert.equal(res.body.data[0].numericId, 801);
   assert.equal(res.body.isScoped, true);
 });
 
@@ -117,7 +117,7 @@ test('🔒 [PRIVACY] Parent GET /api/risk/assessments returns ONLY their child\'
 
   assert.equal(res.status, 200);
   assert.equal(res.body.assessments.length, 1);
-  assert.equal(res.body.assessments[0].studentId, 1);
+  assert.equal(res.body.assessments[0].studentId, 801);
   assert.equal(res.body.isScoped, true);
 });
 
@@ -126,7 +126,7 @@ test('🔒 [PRIVACY] Parent attempting to mark roll call POST /api/attendance MU
     .post('/api/attendance')
     .set('Authorization', `Bearer ${parentToken}`)
     .send({
-      studentId: 1,
+      studentId: 801,
       attendanceDate: '2026-11-22',
       status: 'present'
     });

@@ -15,6 +15,7 @@ import riskRoutes from './routes/riskRoutes.js';
 import academicRoutes from './routes/academicRoutes.js';
 import interventionRoutes from './routes/interventionRoutes.js';
 import resourceRoutes from './routes/resourceRoutes.js';
+import quizRoutes from './routes/quizRoutes.js';
 
 dotenv.config();
 
@@ -57,6 +58,7 @@ app.use('/api/risk', riskRoutes);
 app.use('/api/academic', academicRoutes);
 app.use('/api/interventions', interventionRoutes);
 app.use('/api/resources', resourceRoutes);
+app.use('/api/quizzes', quizRoutes);
 
 // Catch-all 404 for undefined API routes
 app.all('/api/*', (req, res) => {

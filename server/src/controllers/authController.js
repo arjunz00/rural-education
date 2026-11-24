@@ -4,6 +4,8 @@ import { Attendance } from '../models/Attendance.js';
 import { AcademicRecord } from '../models/AcademicRecord.js';
 import { Intervention } from '../models/Intervention.js';
 import { LearningResource } from '../models/LearningResource.js';
+import { Quiz } from '../models/Quiz.js';
+import { QuizSubmission } from '../models/QuizSubmission.js';
 import { generateToken } from '../middleware/auth.js';
 import { ALL_ROLES, ROLES, FAMILY_ROLES } from '../config/constants.js';
 import {
@@ -12,7 +14,8 @@ import {
   getSeedAttendance,
   seedAcademicRecords,
   seedInterventions,
-  seedLearningResources
+  seedLearningResources,
+  seedQuizzes
 } from '../seed/seedData.js';
 
 export const register = async (req, res, next) => {
@@ -340,8 +343,10 @@ export const getDemoAccounts = async (req, res) => {
       { role: 'teacher', username: 'teacher', name: 'S. Deshmukh', designation: 'Class Teacher (Class 8)' },
       { role: 'headmaster', username: 'headmaster', name: 'Dr. K. Patil', designation: 'Headmaster / Principal' },
       { role: 'admin', username: 'admin', name: 'B. Shinde', designation: 'Block Education Officer' },
-      { role: 'parent', username: 'parent', name: 'Savita Jadhav', designation: 'Parent (Asha Jadhav #1, Class 8)' },
-      { role: 'student', username: 'student', name: 'Asha Jadhav', designation: 'Student (Class 8, #1)' }
+      { role: 'parent', username: 'parent_asha', name: 'Savita Jadhav', designation: 'Parent of Asha (Class 8, #801)' },
+      { role: 'parent', username: 'parent_rahul', name: 'Suresh Pawar', designation: 'Parent of Rahul (Class 5, #501)' },
+      { role: 'parent', username: 'parent_aarav', name: 'Sunita Patil', designation: 'Parent of Aarav (Class 1, #101)' },
+      { role: 'student', username: 'student_asha', name: 'Asha Jadhav', designation: 'Student (Class 8, #801)' }
     ]
   });
 };
@@ -363,7 +368,9 @@ export const seedDemoDatabase = async (req, res, next) => {
       Attendance.deleteMany({}),
       AcademicRecord.deleteMany({}),
       Intervention.deleteMany({}),
-      LearningResource.deleteMany({})
+      LearningResource.deleteMany({}),
+      Quiz.deleteMany({}),
+      QuizSubmission.deleteMany({})
     ]);
 
     const usersData = await getSeedUsers();
@@ -373,6 +380,7 @@ export const seedDemoDatabase = async (req, res, next) => {
     await AcademicRecord.insertMany(seedAcademicRecords);
     await Intervention.insertMany(seedInterventions);
     await LearningResource.insertMany(seedLearningResources);
+    await Quiz.insertMany(seedQuizzes);
 
     return res.status(200).json({
       success: true,

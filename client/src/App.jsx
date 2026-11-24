@@ -105,6 +105,9 @@ export function App() {
       if (currentPath === '/portal/academic') {
         return <ParentStudentPortal subTab="academic" />;
       }
+      if (currentPath === '/portal/quizzes') {
+        return <ParentStudentPortal subTab="quizzes" />;
+      }
       if (currentPath === '/portal/interventions') {
         return <ParentStudentPortal subTab="interventions" />;
       }

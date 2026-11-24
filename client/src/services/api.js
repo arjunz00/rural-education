@@ -157,6 +157,23 @@ export const resourcesAPI = {
   })
 };
 
+export const quizzesAPI = {
+  getQuizzes: (params = {}) => {
+    const q = new URLSearchParams(params).toString();
+    return apiRequest(`/quizzes${q ? `?${q}` : ''}`);
+  },
+  getQuizById: (id) => apiRequest(`/quizzes/${id}`),
+  createQuiz: (data) => apiRequest('/quizzes', {
+    method: 'POST',
+    body: JSON.stringify(data)
+  }),
+  submitQuiz: (id, payload) => apiRequest(`/quizzes/${id}/submit`, {
+    method: 'POST',
+    body: JSON.stringify(payload)
+  }),
+  getSubmissions: (studentId) => apiRequest(`/quizzes/submissions/${studentId}`)
+};
+
 export const healthAPI = {
   check: () => apiRequest('/health')
 };

@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 import { RESOURCE_TYPES } from '../config/constants.js';
 
-export const VALID_CLASS_LEVELS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'all'];
+export const VALID_SUBJECTS = ['Mathematics', 'Science', 'English', 'EVS', 'Social Science', 'Marathi'];
 
 const learningResourceSchema = new mongoose.Schema(
   {
@@ -10,29 +10,30 @@ const learningResourceSchema = new mongoose.Schema(
       required: true,
       trim: true
     },
+    classLevel: {
+      type: Number,
+      required: true,
+      min: 1,
+      max: 10,
+      index: true
+    },
+    className: {
+      type: String,
+      default: function () {
+        return String(this.classLevel);
+      }
+    },
     subject: {
       type: String,
       required: true,
-      trim: true
+      trim: true,
+      enum: VALID_SUBJECTS
     },
     resourceType: {
       type: String,
       required: true,
       enum: RESOURCE_TYPES,
       default: 'text'
-    },
-    classLevel: {
-      type: String,
-      required: true,
-      enum: VALID_CLASS_LEVELS,
-      default: 'all',
-      index: true
-    },
-    className: {
-      type: String,
-      default: function () {
-        return this.classLevel || 'all';
-      }
     },
     description: {
       type: String,
@@ -41,15 +42,20 @@ const learningResourceSchema = new mongoose.Schema(
     },
     content: {
       type: String,
+      required: true,
       default: ''
     },
     downloadSize: {
       type: String,
-      default: '50 KB'
+      default: '25 KB'
     },
     duration: {
       type: String,
       default: '—'
+    },
+    createdAt: {
+      type: Date,
+      default: Date.now
     }
   },
   {

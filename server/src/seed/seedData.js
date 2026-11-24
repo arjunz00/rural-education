@@ -5,7 +5,7 @@ export const getSeedUsers = async () => {
   const passwordHash = await bcrypt.hash('password123', salt);
 
   return [
-    // Staff: Class Teachers
+    // Staff: Class Teacher
     {
       username: 'teacher',
       email: 'teacher@zp-dahiwadi.edu.in',
@@ -18,43 +18,6 @@ export const getSeedUsers = async () => {
       studentId: null,
       isActive: true
     },
-    {
-      username: 'teacher.c2',
-      email: 'teacher.c2@zp-dahiwadi.edu.in',
-      passwordHash,
-      passwordSalt: salt,
-      fullName: 'P. Shinde (Primary)',
-      role: 'teacher',
-      assignedClass: '2',
-      schoolName: 'Zilla Parishad High School, Dahiwadi',
-      studentId: null,
-      isActive: true
-    },
-    {
-      username: 'teacher.c5',
-      email: 'teacher.c5@zp-dahiwadi.edu.in',
-      passwordHash,
-      passwordSalt: salt,
-      fullName: 'M. Kulkarni (Primary Wing Head)',
-      role: 'teacher',
-      assignedClass: '5',
-      schoolName: 'Zilla Parishad High School, Dahiwadi',
-      studentId: null,
-      isActive: true
-    },
-    {
-      username: 'teacher.c10',
-      email: 'teacher.c10@zp-dahiwadi.edu.in',
-      passwordHash,
-      passwordSalt: salt,
-      fullName: 'V. Joshi (Secondary Coordinator)',
-      role: 'teacher',
-      assignedClass: '10',
-      schoolName: 'Zilla Parishad High School, Dahiwadi',
-      studentId: null,
-      isActive: true
-    },
-
     // Staff: Administration
     {
       username: 'headmaster',
@@ -74,26 +37,130 @@ export const getSeedUsers = async () => {
       passwordSalt: salt,
       fullName: 'B. Shinde',
       role: 'admin',
-      schoolName: 'Dahiwadi Block Education Office',
+      schoolName: 'Dahiwadi Block Education Circle',
       studentId: null,
       isActive: true
     },
 
-    // Class 8 (Middle Wing): Asha Jadhav & Savita Jadhav
+    // 1. Class 1: Aarav Patil (Roll #101) & Sunita Patil
     {
-      username: 'parent',
-      email: 'parent.jadhav@grampanchayat.in',
+      username: 'parent_aarav',
+      email: 'sunita.patil@grampanchayat.in',
+      passwordHash,
+      passwordSalt: salt,
+      fullName: 'Sunita Patil',
+      role: 'parent',
+      assignedClass: '1',
+      schoolName: 'Zilla Parishad High School, Dahiwadi',
+      studentId: 101,
+      isActive: true
+    },
+    {
+      username: 'student_aarav',
+      email: 'aarav.patil@student.zp.in',
+      passwordHash,
+      passwordSalt: salt,
+      fullName: 'Aarav Patil',
+      role: 'student',
+      assignedClass: '1',
+      schoolName: 'Zilla Parishad High School, Dahiwadi',
+      studentId: 101,
+      isActive: true
+    },
+
+    // 2. Class 3: Ananya Gavit (Roll #301) & Suman Gavit
+    {
+      username: 'parent_ananya',
+      email: 'suman.gavit@grampanchayat.in',
+      passwordHash,
+      passwordSalt: salt,
+      fullName: 'Suman Gavit',
+      role: 'parent',
+      assignedClass: '3',
+      schoolName: 'Zilla Parishad High School, Dahiwadi',
+      studentId: 301,
+      isActive: true
+    },
+    {
+      username: 'student_ananya',
+      email: 'ananya.gavit@student.zp.in',
+      passwordHash,
+      passwordSalt: salt,
+      fullName: 'Ananya Gavit',
+      role: 'student',
+      assignedClass: '3',
+      schoolName: 'Zilla Parishad High School, Dahiwadi',
+      studentId: 301,
+      isActive: true
+    },
+
+    // 3. Class 5: Rahul Pawar (Roll #501) & Suresh Pawar (Struggling Math, Assigned Quiz)
+    {
+      username: 'parent_rahul',
+      email: 'suresh.pawar5@farmer.in',
+      passwordHash,
+      passwordSalt: salt,
+      fullName: 'Suresh Pawar',
+      role: 'parent',
+      assignedClass: '5',
+      schoolName: 'Zilla Parishad High School, Dahiwadi',
+      studentId: 501,
+      isActive: true
+    },
+    {
+      username: 'student_rahul',
+      email: 'rahul.pawar@student.zp.in',
+      passwordHash,
+      passwordSalt: salt,
+      fullName: 'Rahul Pawar',
+      role: 'student',
+      assignedClass: '5',
+      schoolName: 'Zilla Parishad High School, Dahiwadi',
+      studentId: 501,
+      isActive: true
+    },
+
+    // 4. Class 7: Rohan Pawar (Roll #701) & Suresh Pawar (High Risk, Consecutive Absences)
+    {
+      username: 'parent_rohan',
+      email: 'suresh.pawar7@farmer.in',
+      passwordHash,
+      passwordSalt: salt,
+      fullName: 'Suresh Pawar',
+      role: 'parent',
+      assignedClass: '7',
+      schoolName: 'Zilla Parishad High School, Dahiwadi',
+      studentId: 701,
+      isActive: true
+    },
+    {
+      username: 'student_rohan',
+      email: 'rohan.pawar@student.zp.in',
+      passwordHash,
+      passwordSalt: salt,
+      fullName: 'Rohan Pawar',
+      role: 'student',
+      assignedClass: '7',
+      schoolName: 'Zilla Parishad High School, Dahiwadi',
+      studentId: 701,
+      isActive: true
+    },
+
+    // 5. Class 8: Asha Jadhav (Roll #801) & Savita Jadhav (Remedial Linear Equations Assigned)
+    {
+      username: 'parent_asha',
+      email: 'savita.jadhav@grampanchayat.in',
       passwordHash,
       passwordSalt: salt,
       fullName: 'Savita Jadhav',
       role: 'parent',
       assignedClass: '8',
       schoolName: 'Zilla Parishad High School, Dahiwadi',
-      studentId: 1, // Asha Jadhav (Class 8)
+      studentId: 801,
       isActive: true
     },
     {
-      username: 'student',
+      username: 'student_asha',
       email: 'asha.jadhav@student.zp.in',
       passwordHash,
       passwordSalt: salt,
@@ -101,65 +168,64 @@ export const getSeedUsers = async () => {
       role: 'student',
       assignedClass: '8',
       schoolName: 'Zilla Parishad High School, Dahiwadi',
-      studentId: 1, // Asha Jadhav (Class 8)
+      studentId: 801,
       isActive: true
     },
-
-    // Class 2 (Primary Wing): Rahul Pawar & Suresh Pawar
+    // Aliases for instant fast sign in and test compatibility
     {
-      username: 'parent.c2',
-      email: 'suresh.pawar@farmer.in',
+      username: 'parent',
+      email: 'parent@circle4.gov.in',
       passwordHash,
       passwordSalt: salt,
-      fullName: 'Suresh Pawar',
+      fullName: 'Savita Jadhav',
       role: 'parent',
-      assignedClass: '2',
+      assignedClass: '8',
       schoolName: 'Zilla Parishad High School, Dahiwadi',
-      studentId: 2, // Rahul Pawar (Class 2)
+      studentId: 801,
       isActive: true
     },
     {
-      username: 'student.c2',
-      email: 'rahul.pawar@student.zp.in',
+      username: 'student',
+      email: 'student@circle4.gov.in',
       passwordHash,
       passwordSalt: salt,
-      fullName: 'Rahul Pawar',
+      fullName: 'Asha Jadhav',
       role: 'student',
-      assignedClass: '2',
+      assignedClass: '8',
       schoolName: 'Zilla Parishad High School, Dahiwadi',
-      studentId: 2, // Rahul Pawar (Class 2)
+      studentId: 801,
       isActive: true
     },
 
-    // Class 5 (Primary Wing): Ananya More & Sunita More
+    // 6. Class 9: Meena Shinde (Roll #901) & Kavita Shinde
     {
-      username: 'parent.c5',
-      email: 'sunita.more@village.in',
+      username: 'parent_meena',
+      email: 'kavita.shinde@village.in',
       passwordHash,
       passwordSalt: salt,
-      fullName: 'Sunita More',
+      fullName: 'Kavita Shinde',
       role: 'parent',
-      assignedClass: '5',
+      assignedClass: '9',
       schoolName: 'Zilla Parishad High School, Dahiwadi',
-      studentId: 5, // Ananya More (Class 5)
+      studentId: 901,
       isActive: true
     },
     {
-      username: 'student.c5',
-      email: 'ananya.more@student.zp.in',
+      username: 'student_meena',
+      email: 'meena.shinde@student.zp.in',
       passwordHash,
       passwordSalt: salt,
-      fullName: 'Ananya More',
+      fullName: 'Meena Shinde',
       role: 'student',
-      assignedClass: '5',
+      assignedClass: '9',
       schoolName: 'Zilla Parishad High School, Dahiwadi',
-      studentId: 5, // Ananya More (Class 5)
+      studentId: 901,
       isActive: true
     },
 
-    // Class 10 (Secondary Wing): Sachin Kadam & Ramesh Kadam
+    // 7. Class 10: Sachin Kadam (Roll #1001) & Ramesh Kadam
     {
-      username: 'parent.c10',
+      username: 'parent_sachin',
       email: 'ramesh.kadam@post.in',
       passwordHash,
       passwordSalt: salt,
@@ -167,11 +233,11 @@ export const getSeedUsers = async () => {
       role: 'parent',
       assignedClass: '10',
       schoolName: 'Zilla Parishad High School, Dahiwadi',
-      studentId: 6, // Sachin Kadam (Class 10)
+      studentId: 1001,
       isActive: true
     },
     {
-      username: 'student.c10',
+      username: 'student_sachin',
       email: 'sachin.kadam@student.zp.in',
       passwordHash,
       passwordSalt: salt,
@@ -179,170 +245,152 @@ export const getSeedUsers = async () => {
       role: 'student',
       assignedClass: '10',
       schoolName: 'Zilla Parishad High School, Dahiwadi',
-      studentId: 6, // Sachin Kadam (Class 10)
+      studentId: 1001,
       isActive: true
     }
   ];
 };
 
 export const seedStudents = [
-  // Class 8 - Middle Wing
   {
-    numericId: 1,
+    numericId: 101,
+    fullName: 'Aarav Patil',
+    className: '1',
+    schoolName: 'Zilla Parishad High School, Dahiwadi',
+    parentName: 'Sunita Patil',
+    parentContact: '+91 98221 11001'
+  },
+  {
+    numericId: 301,
+    fullName: 'Ananya Gavit',
+    className: '3',
+    schoolName: 'Zilla Parishad High School, Dahiwadi',
+    parentName: 'Suman Gavit',
+    parentContact: '+91 98221 33001'
+  },
+  {
+    numericId: 501,
+    fullName: 'Rahul Pawar',
+    className: '5',
+    schoolName: 'Zilla Parishad High School, Dahiwadi',
+    parentName: 'Suresh Pawar',
+    parentContact: '+91 98502 55001'
+  },
+  {
+    numericId: 701,
+    fullName: 'Rohan Pawar',
+    className: '7',
+    schoolName: 'Zilla Parishad High School, Dahiwadi',
+    parentName: 'Suresh Pawar',
+    parentContact: '+91 98502 77001'
+  },
+  {
+    numericId: 801,
     fullName: 'Asha Jadhav',
     className: '8',
     schoolName: 'Zilla Parishad High School, Dahiwadi',
     parentName: 'Savita Jadhav',
-    parentContact: '+91 98221 44521'
+    parentContact: '+91 98221 88001'
   },
-  // Class 2 - Primary Wing
   {
-    numericId: 2,
-    fullName: 'Rahul Pawar',
-    className: '2',
-    schoolName: 'Zilla Parishad High School, Dahiwadi',
-    parentName: 'Suresh Pawar',
-    parentContact: '+91 98502 33119'
-  },
-  // Class 8 - Middle Wing
-  {
-    numericId: 3,
+    numericId: 901,
     fullName: 'Meena Shinde',
-    className: '8',
+    className: '9',
     schoolName: 'Zilla Parishad High School, Dahiwadi',
-    parentName: 'Anand Shinde',
-    parentContact: '+91 94235 77812'
+    parentName: 'Kavita Shinde',
+    parentContact: '+91 98221 99001'
   },
-  // Class 8 - Middle Wing
   {
-    numericId: 4,
-    fullName: 'Sachin Kamble',
-    className: '8',
-    schoolName: 'Zilla Parishad High School, Dahiwadi',
-    parentName: 'Nitin Kamble',
-    parentContact: '+91 97631 88924'
-  },
-  // Class 5 - Primary Wing
-  {
-    numericId: 5,
-    fullName: 'Ananya More',
-    className: '5',
-    schoolName: 'Zilla Parishad High School, Dahiwadi',
-    parentName: 'Sunita More',
-    parentContact: '+91 99210 66345'
-  },
-  // Class 10 - Secondary Wing
-  {
-    numericId: 6,
+    numericId: 1001,
     fullName: 'Sachin Kadam',
     className: '10',
     schoolName: 'Zilla Parishad High School, Dahiwadi',
     parentName: 'Ramesh Kadam',
-    parentContact: '+91 98901 22334'
+    parentContact: '+91 98221 10001'
   }
 ];
 
-// Helper to generate dates for past 10 instructional days (excluding weekends)
-export const getTenInstructionalDates = () => {
-  return [
-    '2026-11-10',
-    '2026-11-11',
-    '2026-11-12',
-    '2026-11-13',
-    '2026-11-14',
-    '2026-11-17',
-    '2026-11-18',
-    '2026-11-19',
-    '2026-11-20',
-    '2026-11-21'
-  ];
-};
-
 export const getSeedAttendance = () => {
-  const dates = getTenInstructionalDates();
+  const dates = [
+    '2026-11-10', '2026-11-11', '2026-11-12', '2026-11-13', '2026-11-14',
+    '2026-11-17', '2026-11-18', '2026-11-19', '2026-11-20', '2026-11-21'
+  ];
+
   const records = [];
 
-  // 1. Asha Jadhav (id: 1, Class 8) - High attendance (9 present, 1 late = 95%)
-  const ashaStatus = [
-    'present', 'present', 'present', 'present', 'late',
-    'present', 'present', 'present', 'present', 'present'
-  ];
+  // 1. Aarav Patil (Roll #101, Class 1) - 90% attendance
+  const aaravStatus = ['present', 'present', 'present', 'present', 'late', 'present', 'present', 'present', 'present', 'present'];
   dates.forEach((d, idx) => {
     records.push({
-      studentId: 1,
+      studentId: 101,
       attendanceDate: d,
-      status: ashaStatus[idx],
-      notes: ashaStatus[idx] === 'late' ? 'Bus delayed due to village road maintenance' : ''
+      status: aaravStatus[idx],
+      notes: aaravStatus[idx] === 'late' ? 'Walked from wadi with elder sibling' : ''
     });
   });
 
-  // 2. Rahul Pawar (id: 2, Class 2) - At-risk primary learner (50% attendance, 4 consecutive absences)
-  const rahulStatus = [
-    'present', 'present', 'present', 'absent', 'present',
-    'present', 'absent', 'absent', 'absent', 'absent'
-  ];
+  // 2. Ananya Gavit (Roll #301, Class 3) - 85% attendance
+  const ananyaStatus = ['present', 'present', 'present', 'present', 'present', 'present', 'absent', 'present', 'present', 'present'];
   dates.forEach((d, idx) => {
     records.push({
-      studentId: 2,
+      studentId: 301,
+      attendanceDate: d,
+      status: ananyaStatus[idx],
+      notes: ananyaStatus[idx] === 'absent' ? 'Mild seasonal fever' : ''
+    });
+  });
+
+  // 3. Rahul Pawar (Roll #501, Class 5) - Struggling math (70% attendance)
+  const rahulStatus = ['present', 'present', 'absent', 'present', 'present', 'absent', 'present', 'present', 'absent', 'present'];
+  dates.forEach((d, idx) => {
+    records.push({
+      studentId: 501,
       attendanceDate: d,
       status: rahulStatus[idx],
-      notes: rahulStatus[idx] === 'absent' ? 'Family harvest season field assistance' : ''
+      notes: rahulStatus[idx] === 'absent' ? 'Family market day errand' : ''
     });
   });
 
-  // 3. Meena Shinde (id: 3, Class 8) - Medium Risk (7 present, 3 absent = 70%)
-  const meenaStatus = [
-    'absent', 'present', 'present', 'absent', 'present',
-    'present', 'present', 'absent', 'present', 'present'
-  ];
+  // 4. Rohan Pawar (Roll #701, Class 7) - High Risk / Critical Alert (4 consecutive absences at end: 50%)
+  const rohanStatus = ['present', 'present', 'present', 'absent', 'present', 'present', 'absent', 'absent', 'absent', 'absent'];
   dates.forEach((d, idx) => {
     records.push({
-      studentId: 3,
+      studentId: 701,
+      attendanceDate: d,
+      status: rohanStatus[idx],
+      notes: rohanStatus[idx] === 'absent' ? 'Family harvest season field assistance' : ''
+    });
+  });
+
+  // 5. Asha Jadhav (Roll #801, Class 8) - Dropping trend (50% attendance)
+  const ashaStatus = ['present', 'present', 'present', 'present', 'absent', 'absent', 'present', 'absent', 'absent', 'absent'];
+  dates.forEach((d, idx) => {
+    records.push({
+      studentId: 801,
+      attendanceDate: d,
+      status: ashaStatus[idx],
+      notes: ashaStatus[idx] === 'absent' ? 'Bus missed due to village road repair' : ''
+    });
+  });
+
+  // 6. Meena Shinde (Roll #901, Class 9) - 90% attendance
+  const meenaStatus = ['present', 'present', 'present', 'present', 'present', 'late', 'present', 'present', 'present', 'present'];
+  dates.forEach((d, idx) => {
+    records.push({
+      studentId: 901,
       attendanceDate: d,
       status: meenaStatus[idx],
-      notes: meenaStatus[idx] === 'absent' ? 'Taking care of younger sibling at home' : ''
-    });
-  });
-
-  // 4. Sachin Kamble (id: 4, Class 8) - Regular / Low Risk
-  const sachinStatus = [
-    'present', 'present', 'present', 'present', 'present',
-    'present', 'late', 'present', 'present', 'present'
-  ];
-  dates.forEach((d, idx) => {
-    records.push({
-      studentId: 4,
-      attendanceDate: d,
-      status: sachinStatus[idx],
       notes: ''
     });
   });
 
-  // 5. Ananya More (id: 5, Class 5) - Excellent attendance (10/10)
-  const ananyaStatus = [
-    'present', 'present', 'present', 'present', 'present',
-    'present', 'present', 'present', 'present', 'present'
-  ];
-  dates.forEach((d, idx) => {
+  // 7. Sachin Kadam (Roll #1001, Class 10) - 100% attendance
+  dates.forEach((d) => {
     records.push({
-      studentId: 5,
+      studentId: 1001,
       attendanceDate: d,
-      status: ananyaStatus[idx],
-      notes: 'Active participant in morning bal sabha'
-    });
-  });
-
-  // 6. Sachin Kadam (id: 6, Class 10) - High attendance (9 present, 1 absent = 90%)
-  const sachin10Status = [
-    'present', 'present', 'present', 'present', 'present',
-    'present', 'present', 'absent', 'present', 'present'
-  ];
-  dates.forEach((d, idx) => {
-    records.push({
-      studentId: 6,
-      attendanceDate: d,
-      status: sachin10Status[idx],
-      notes: sachin10Status[idx] === 'absent' ? 'Preparing for board science practicals' : ''
+      status: 'present',
+      notes: 'Dedicated board preparation attendee'
     });
   });
 
@@ -350,227 +398,401 @@ export const getSeedAttendance = () => {
 };
 
 export const seedAcademicRecords = [
-  // Asha Jadhav (id: 1, Class 8)
-  { studentId: 1, subject: 'Mathematics', examName: 'Unit Test 1', marksObtained: 78, maxMarks: 100, examDate: '2026-11-05', remarks: 'Good grasp of linear equations; needs revision in geometry theorems.' },
-  { studentId: 1, subject: 'Science', examName: 'Unit Test 1', marksObtained: 82, maxMarks: 100, examDate: '2026-11-06', remarks: 'Exceptional performance in photosynthesis experiment diagrams.' },
-  { studentId: 1, subject: 'English', examName: 'Unit Test 1', marksObtained: 74, maxMarks: 100, examDate: '2026-11-07', remarks: 'Active classroom participator; practice essay paragraph structuring.' },
+  // Aarav Patil (Roll #101, Class 1)
+  { studentId: 101, subject: 'English', examName: 'Unit Test 1', marksObtained: 46, maxMarks: 50, examDate: '2026-11-05', remarks: 'Understands animal phonics sounds.' },
+  { studentId: 101, subject: 'Mathematics', examName: 'Unit Test 1', marksObtained: 44, maxMarks: 50, examDate: '2026-11-06', remarks: 'Good object counting.' },
 
-  // Rahul Pawar (id: 2, Class 2)
-  { studentId: 2, subject: 'Mathematics', examName: 'Unit Test 1', marksObtained: 45, maxMarks: 50, examDate: '2026-11-05', remarks: 'Can count and group matchstick bundles up to 100 effortlessly.' },
-  { studentId: 2, subject: 'English', examName: 'Unit Test 1', marksObtained: 42, maxMarks: 50, examDate: '2026-11-06', remarks: 'Understands animal phonics sounds very well.' },
+  // Ananya Gavit (Roll #301, Class 3)
+  { studentId: 301, subject: 'EVS', examName: 'Unit Test 1', marksObtained: 82, maxMarks: 100, examDate: '2026-11-05', remarks: 'Clear understanding of water cleanliness.' },
+  { studentId: 301, subject: 'Mathematics', examName: 'Unit Test 1', marksObtained: 76, maxMarks: 100, examDate: '2026-11-06', remarks: 'Addition and subtraction fluent.' },
 
-  // Meena Shinde (id: 3, Class 8)
-  { studentId: 3, subject: 'Mathematics', examName: 'Unit Test 1', marksObtained: 56, maxMarks: 100, examDate: '2026-11-05', remarks: 'Steady effort shown; encourage group problem solving.' },
-  { studentId: 3, subject: 'Science', examName: 'Unit Test 1', marksObtained: 62, maxMarks: 100, examDate: '2026-11-06', remarks: 'Good understanding of environmental topics.' },
-  { studentId: 3, subject: 'English', examName: 'Unit Test 1', marksObtained: 58, maxMarks: 100, examDate: '2026-11-07', remarks: 'Improving reading fluency week over week.' },
+  // Rahul Pawar (Roll #501, Class 5) - Struggling in fractions
+  { studentId: 501, subject: 'Mathematics', examName: 'Unit Test 1', marksObtained: 32, maxMarks: 100, examDate: '2026-11-05', remarks: 'Struggling with fractions & division. Remedial quiz assigned.' },
+  { studentId: 501, subject: 'Science', examName: 'Unit Test 1', marksObtained: 42, maxMarks: 100, examDate: '2026-11-06', remarks: 'Needs revision of photosynthesis and plant structures.' },
 
-  // Ananya More (id: 5, Class 5)
-  { studentId: 5, subject: 'Science', examName: 'Unit Test 1', marksObtained: 88, maxMarks: 100, examDate: '2026-11-05', remarks: 'Clear understanding of plant parts and germination.' },
-  { studentId: 5, subject: 'Mathematics', examName: 'Unit Test 1', marksObtained: 84, maxMarks: 100, examDate: '2026-11-06', remarks: 'Excellent calculation speed in long division.' },
+  // Rohan Pawar (Roll #701, Class 7) - Critical risk
+  { studentId: 701, subject: 'Mathematics', examName: 'Unit Test 1', marksObtained: 34, maxMarks: 100, examDate: '2026-11-05', remarks: 'Needs remedial assistance in algebraic variables.' },
+  { studentId: 701, subject: 'Science', examName: 'Unit Test 1', marksObtained: 38, maxMarks: 100, examDate: '2026-11-06', remarks: 'Struggling with plant nutrition terms. Assigned remedial quiz.' },
 
-  // Sachin Kadam (id: 6, Class 10)
-  { studentId: 6, subject: 'Mathematics', examName: 'Unit Test 1', marksObtained: 91, maxMarks: 100, examDate: '2026-11-05', remarks: 'Solved quadratic equations with high precision.' },
-  { studentId: 6, subject: 'Science', examName: 'Unit Test 1', marksObtained: 86, maxMarks: 100, examDate: '2026-11-06', remarks: 'Accurate balancing of chemical redox reactions.' },
-  { studentId: 6, subject: 'English', examName: 'Unit Test 1', marksObtained: 80, maxMarks: 100, examDate: '2026-11-07', remarks: 'Clear mastery of active/passive voice transformation.' }
+  // Asha Jadhav (Roll #801, Class 8) - Dropping trend
+  { studentId: 801, subject: 'Mathematics', examName: 'Unit Test 1', marksObtained: 35, maxMarks: 100, examDate: '2026-11-05', remarks: 'Linear equations transposition confusion. Assigned practice quiz.' },
+  { studentId: 801, subject: 'Science', examName: 'Unit Test 1', marksObtained: 68, maxMarks: 100, examDate: '2026-11-06', remarks: 'Good scientific diagramming.' },
+  { studentId: 801, subject: 'English', examName: 'Unit Test 1', marksObtained: 72, maxMarks: 100, examDate: '2026-11-07', remarks: 'Active reader; improving spelling.' },
+
+  // Meena Shinde (Roll #901, Class 9)
+  { studentId: 901, subject: 'Science', examName: 'Unit Test 1', marksObtained: 81, maxMarks: 100, examDate: '2026-11-05', remarks: 'Good physics conceptual grasp.' },
+  { studentId: 901, subject: 'Social Science', examName: 'Unit Test 1', marksObtained: 85, maxMarks: 100, examDate: '2026-11-06', remarks: 'Excellent understanding of Gram Panchayat governance.' },
+
+  // Sachin Kadam (Roll #1001, Class 10)
+  { studentId: 1001, subject: 'Mathematics', examName: 'Unit Test 1', marksObtained: 92, maxMarks: 100, examDate: '2026-11-05', remarks: 'Solves quadratic formulas accurately.' },
+  { studentId: 1001, subject: 'Science', examName: 'Unit Test 1', marksObtained: 88, maxMarks: 100, examDate: '2026-11-06', remarks: 'Solid chemistry balancing skills.' }
 ];
 
 export const seedInterventions = [
   {
-    studentId: 3, // Meena Shinde
-    interventionType: 'student_meeting',
-    concern: 'Intermittent absences on market days (haat) to manage household chores.',
-    actionTaken: 'Held counseling session with student and paired with study buddy Asha Jadhav for shared notes.',
-    createdOn: '2026-11-12',
-    followUpDate: '2026-11-20',
-    status: 'resolved',
-    preAttendancePct: 60,
-    postAttendancePct: 80,
-    attendanceOutcome: 'improved',
-    deltaPct: 20
+    studentId: 701, // Rohan Pawar
+    interventionType: 'parent_contact',
+    concern: 'Critical unexcused absence for 4 consecutive school days during harvest season.',
+    actionTaken: 'Called father Suresh Pawar. Agreed on morning study hours before field duties.',
+    createdOn: '2026-11-19',
+    followUpDate: '2026-11-25',
+    status: 'open',
+    preAttendancePct: 50,
+    postAttendancePct: null,
+    attendanceOutcome: 'insufficient_data',
+    deltaPct: null
   },
   {
-    studentId: 1, // Asha Jadhav
+    studentId: 801, // Asha Jadhav
     interventionType: 'learning_support',
-    concern: 'Expressed interest in advanced math geometry Olympiad questions.',
-    actionTaken: 'Provided additional state board enrichment worksheet and audio capsule.',
-    createdOn: '2026-11-16',
-    followUpDate: '2026-11-28',
-    status: 'resolved',
-    preAttendancePct: 90,
-    postAttendancePct: 95,
-    attendanceOutcome: 'steady',
-    deltaPct: 5
+    concern: 'Struggling with linear equations & missed buses leading to 50% attendance.',
+    actionTaken: 'Assigned Remedial Linear Equations Practice Quiz & connected with peer buddy.',
+    createdOn: '2026-11-18',
+    followUpDate: '2026-11-26',
+    status: 'in_progress',
+    preAttendancePct: 50,
+    postAttendancePct: null,
+    attendanceOutcome: 'insufficient_data',
+    deltaPct: null
   }
 ];
 
-// Comprehensive Class 1 to 10 Curriculum-Aligned Learning Resources (14 Authentic Items)
 export const seedLearningResources = [
-  // 1. Primary - Class 1
+  // Class 1 Resources
   {
     title: 'Alphabet Phonics & Animal Sounds',
     subject: 'English',
-    classLevel: '1',
+    classLevel: 1,
     className: '1',
     resourceType: 'audio',
     description: 'Letter sounds A to Z with familiar village animal calls.',
-    content: 'Audio Phonics: A is for Ant (chinti), B is for Bird (pakshi). Hear the cuckoo sing: Koo-koo! C is for Cow (gaay): Mooo! Let us practice letter sounds with our village animal friends.',
+    content: 'Phonics Guide: Letter A sounds like ant, letter B sounds like bullock, letter C sounds like calf. Listen carefully to the audio pronunciation cues and repeat three times.',
     downloadSize: '45 KB',
     duration: '3 min'
   },
-  // 2. Primary - Class 2
+  {
+    title: 'Counting 1 to 20 with Village Objects',
+    subject: 'Mathematics',
+    classLevel: 1,
+    className: '1',
+    resourceType: 'text',
+    description: 'Number recognition using mangoes, neem leaves, and pebbles.',
+    content: 'Counting Guide: Count 1 neem leaf, 2 stones, 5 mangoes, 10 seeds, and group them into pairs to learn fundamental counting from 1 to 20.',
+    downloadSize: '18 KB',
+    duration: '5 min'
+  },
+
+  // Class 2 Resources
   {
     title: 'Counting 1 to 100 with Bundles of Ten',
     subject: 'Mathematics',
-    classLevel: '2',
+    classLevel: 2,
     className: '2',
     resourceType: 'text',
     description: 'Place value basics using matchstick bundle diagrams.',
-    content: 'Grouping in Tens: 10 loose matchsticks tied together make 1 Ten Bundle. 3 Bundles and 4 loose sticks = 30 + 4 = 34. Practicing place values (Units and Tens) helps in market counting.',
-    downloadSize: '18 KB',
-    duration: '—'
+    content: 'Place Value Concept: 10 loose matchsticks = 1 bundle of ten. 2 bundles = 20. 5 bundles and 4 loose sticks = 54. Practice counting tens and units.',
+    downloadSize: '20 KB',
+    duration: '8 min'
   },
-  // 3. Primary - Class 3
+  {
+    title: 'Basic Rhymes & Picture Reading',
+    subject: 'English',
+    classLevel: 2,
+    className: '2',
+    resourceType: 'audio',
+    description: 'Rhythmic village nursery rhymes with pronunciation clarity.',
+    content: 'Audio Rhyme: "Rain on the green grass, rain on the sugarcane field, rain on the school rooftop, but not upon me!" Repeat with cadence.',
+    downloadSize: '48 KB',
+    duration: '3 min'
+  },
+
+  // Class 3 Resources
   {
     title: 'Our Village Water Sources & Hygiene',
-    subject: 'Environmental Studies',
-    classLevel: '3',
+    subject: 'EVS',
+    classLevel: 3,
     className: '3',
     resourceType: 'text',
     description: 'Wells, handpumps, boiled water safety, and cleanliness.',
-    content: 'Clean Water Rules: 1. Keep surroundings of borewells and village handpumps free from stagnant puddles. 2. Always boil or filter drinking water during monsoon. 3. Wash hands before eating meals.',
+    content: 'Hygiene Packet: Always boil open well water before drinking during monsoon. Wash hands with soap before mid-day meals. Never litter near village community handpumps.',
     downloadSize: '22 KB',
-    duration: '—'
+    duration: '6 min'
   },
-  // 4. Primary - Class 4
+  {
+    title: 'Community Helpers & Village Crafts',
+    subject: 'EVS',
+    classLevel: 3,
+    className: '3',
+    resourceType: 'text',
+    description: 'Farmers, potters, blacksmiths, and postmen in village life.',
+    content: 'Social Studies Summary: Learn how potters shape earthen clay water pitchers (matkas), blacksmiths sharpen plough blades, and postmen deliver village letters.',
+    downloadSize: '24 KB',
+    duration: '8 min'
+  },
+
+  // Class 4 Resources
   {
     title: 'Multiplication Tables & Quick Mental Math',
     subject: 'Mathematics',
-    classLevel: '4',
+    classLevel: 4,
     className: '4',
     resourceType: 'audio',
     description: 'Rhythmic table recitation (2 to 10) with word problems.',
-    content: 'Rhythmic Chanting: "Two ones are two, two twos are four..." Fast mental tricks: If one mango costs 4 rupees, how much for 6 mangoes? 4 times 6 is 24 rupees! Sing along every morning.',
+    content: 'Audio Lecture: "2 times 6 is 12, 3 times 7 is 21, 4 times 8 is 32..." Practice doubling and tripling market grocery bills in your head.',
     downloadSize: '68 KB',
     duration: '4 min'
   },
-  // 5. Primary - Class 5
   {
-    title: 'Parts of Plants & How Seeds Grow',
+    title: 'Maps, Directions & Village Landmarks',
+    subject: 'EVS',
+    classLevel: 4,
+    className: '4',
+    resourceType: 'text',
+    description: 'Cardinal directions using sunrise over the eastern hills.',
+    content: 'Geography Primer: Face the morning sunrise to locate East. Your back faces West, your left hand points North toward the temple, right hand points South toward the river.',
+    downloadSize: '26 KB',
+    duration: '8 min'
+  },
+
+  // Class 5 Resources
+  {
+    title: 'Plant Parts & Seed Growth',
     subject: 'Science',
-    classLevel: '5',
+    classLevel: 5,
     className: '5',
     resourceType: 'text',
     description: 'Roots, stem, photosynthesis simplified, seed germination.',
-    content: 'Plant Anatomy & Growth: Roots absorb water and minerals from soil. Stem transports sap to leaves. Leaves act as kitchens, creating green food with sunlight. Seeds need air, water, and soil warmth to germinate.',
+    content: 'Biology Summary: Tap roots vs fibrous roots. Stems conduct water from soil to foliage. Chlorophyll uses sunlight to manufacture plant nutrients. Germination requires air, warmth, and moisture.',
     downloadSize: '25 KB',
-    duration: '—'
+    duration: '8 min'
   },
-  // 6. Middle - Class 6
+  {
+    title: 'Multiplication & Division Word Problems',
+    subject: 'Mathematics',
+    classLevel: 5,
+    className: '5',
+    resourceType: 'text',
+    description: 'Solving agricultural harvest yields and fair market splits.',
+    content: 'Arithmetic Guide: If 1 crate contains 24 pomegranates, how many in 15 crates? 24 x 15 = 360. If 480 seeds are divided equally among 8 crop furrows, 480 / 8 = 60 seeds per furrow.',
+    downloadSize: '30 KB',
+    duration: '10 min'
+  },
+
+  // Class 6 Resources
   {
     title: 'Fractions & Decimals in Daily Life',
     subject: 'Mathematics',
-    classLevel: '6',
+    classLevel: 6,
     className: '6',
     resourceType: 'text',
     description: 'Market calculation examples, half/quarter shares.',
-    content: 'Everyday Fractions: Half bhakri is 1/2. Dividing 1 acre into 4 parts gives 1/4 acre each. Decimals: 50 paise is Rs 0.50. Adding 0.25 kg + 0.75 kg = 1.00 kg. Practical examples for village markets.',
+    content: 'Fraction Fundamentals: Proper fractions (3/4), Improper fractions (7/5), and Mixed numbers (1 1/2). Converting 1/4 kg jaggery to decimal gives 0.25 kg. Adding fractions with unlike denominators.',
     downloadSize: '28 KB',
-    duration: '—'
+    duration: '10 min'
   },
-  // 7. Middle - Class 7
+  {
+    title: 'Earth & Solar System Basics',
+    subject: 'Science',
+    classLevel: 6,
+    className: '6',
+    resourceType: 'audio',
+    description: 'Planetary orbits, day-night cycle, and seasons explained.',
+    content: 'Astronomy Audio: "Earth rotates on its axis every 24 hours giving us day and night, and revolves around the Sun in 365.25 days causing the changing seasons..."',
+    downloadSize: '65 KB',
+    duration: '4 min'
+  },
+
+  // Class 7 Resources
   {
     title: 'Nutrition in Plants & Animals',
     subject: 'Science',
-    classLevel: '7',
+    classLevel: 7,
     className: '7',
     resourceType: 'audio',
     description: 'Autotrophic vs heterotrophic nutrition audio walkthrough.',
-    content: 'Audio Lecture: "Namaskar vidyarthi mitranno. Green plants prepare their own food via photosynthesis and are called autotrophs. Animals and humans depend on plants and other animals, hence called heterotrophs..."',
+    content: 'Biology Audio Capsule: "Autotrophs like green jowar crops synthesize food using carbon dioxide, water, and chlorophyll. Animals and humans are heterotrophs depending on plants..."',
     downloadSize: '72 KB',
     duration: '5 min'
   },
-  // 8. Middle - Class 8
   {
-    title: 'Reading Fluency & Active Storytelling',
+    title: 'Heat, Temperature & Village Climate',
+    subject: 'Science',
+    classLevel: 7,
+    className: '7',
+    resourceType: 'text',
+    description: 'Conduction, convection, radiation, and thermometer usage.',
+    content: 'Physics Summary: Heat flows from hotter to cooler bodies. Conduction occurs in metal spoons, convection occurs when boiling river water, radiation occurs from the burning midday sun.',
+    downloadSize: '30 KB',
+    duration: '8 min'
+  },
+
+  // Class 8 Resources
+  {
+    title: 'Fractions & Linear Equations',
+    subject: 'Mathematics',
+    classLevel: 8,
+    className: '8',
+    resourceType: 'text',
+    description: 'Step-by-step solved linear equation templates and algebraic terms.',
+    content: 'Algebra Guide: ax + b = c. Transposition rule: terms change signs when crossing the equals sign. Example: 3x + 12 = 27 => 3x = 15 => x = 5. Verify by back-substitution.',
+    downloadSize: '32 KB',
+    duration: '12 min'
+  },
+  {
+    title: 'English Reading Fluency Story',
     subject: 'English',
-    classLevel: '8',
+    classLevel: 8,
     className: '8',
     resourceType: 'audio',
-    description: 'Folk tale read-aloud with pronunciation cues.',
-    content: 'Folk Tale: "Once upon a time in a drought-prone valley, a wise farmer decided to build a rainwater pit..." Listen closely to vowel pronunciations and pause punctuation for storytelling.',
+    description: 'Folk tale read-aloud with pronunciation cues and tone pauses.',
+    content: 'Audio Folk Tale: "In a drought-prone valley near the Sahyadri hills, an elderly farmer taught the village children how to conserve rainwater..." Listen to vowel enunciation and expressive commas.',
     downloadSize: '85 KB',
     duration: '5 min'
   },
-  // 9. Middle - Class 8
-  {
-    title: 'Linear Equations & Geometry Theorems',
-    subject: 'Mathematics',
-    classLevel: '8',
-    className: '8',
-    resourceType: 'text',
-    description: 'Step-by-step solved equation templates.',
-    content: 'Linear Equations: ax + b = c. Transposition Rule: When moving terms across the equal sign, addition becomes subtraction and multiplication becomes division. Solved Example: 3x + 12 = 27 => 3x = 15 => x = 5.',
-    downloadSize: '32 KB',
-    duration: '—'
-  },
-  // 10. Secondary - Class 9
+
+  // Class 9 Resources
   {
     title: 'Motion, Force & Laws of Gravitation',
     subject: 'Science',
-    classLevel: '9',
+    classLevel: 9,
     className: '9',
     resourceType: 'text',
-    description: 'Newton\'s laws simplified with bullock cart examples.',
-    content: 'Newtonian Physics Simplified: 1st Law (Inertia): A bullock cart remains stationary until bullocks apply force. 2nd Law (F = ma): Heavier loads require more pulling force. 3rd Law: Action and reaction are equal and opposite.',
+    description: 'Newton\'s three laws simplified with bullock cart examples.',
+    content: 'Newtonian Physics: 1st Law (Inertia): A stationary cart requires external force to move. 2nd Law (F = ma): Force is proportional to acceleration. 3rd Law: For every action, an equal and opposite reaction.',
     downloadSize: '35 KB',
-    duration: '—'
+    duration: '12 min'
   },
-  // 11. Secondary - Class 9
   {
     title: 'Democracy & Village Panchayat Governance',
     subject: 'Social Science',
-    classLevel: '9',
+    classLevel: 9,
     className: '9',
     resourceType: 'audio',
     description: 'Gram Panchayat functions, Gram Sabha powers, citizen rights.',
-    content: 'Civics Audio: "The Gram Sabha is the grassroots foundation of Indian democracy. Every registered adult villager is a member. The Gram Panchayat implements developmental schemes, water works, and village roads..."',
+    content: 'Civics Audio: "The Gram Sabha is the democratic parliament of the village. Every registered voter participates in electing the Sarpanch and approving annual rural development budgets..."',
     downloadSize: '78 KB',
     duration: '4 min'
   },
-  // 12. Secondary - Class 10
+
+  // Class 10 Resources
   {
-    title: 'Quadratic Equations & Arithmetic Progressions',
+    title: 'Quadratic Equations Formula Sheet',
     subject: 'Mathematics',
-    classLevel: '10',
+    classLevel: 10,
     className: '10',
     resourceType: 'text',
-    description: 'Board exam formula sheet and standard step solutions.',
-    content: 'Class 10 Board Formulas: Standard Quadratic form: ax^2 + bx + c = 0. Discriminant D = b^2 - 4ac. Roots: x = (-b ± √D) / 2a. Arithmetic Progression (AP): nth term Tn = a + (n-1)d. Sum Sn = n/2 [2a + (n-1)d].',
+    description: 'Board exam quadratic standard formula and discriminant guide.',
+    content: 'Board Exam Formulas: Standard form ax^2 + bx + c = 0. Discriminant D = b^2 - 4ac. If D > 0, two distinct real roots x = (-b ± √D) / 2a. Arithmetic Progression: nth term Tn = a + (n-1)d.',
     downloadSize: '38 KB',
-    duration: '—'
+    duration: '15 min'
   },
-  // 13. Secondary - Class 10
   {
-    title: 'Chemical Reactions, Acids, Bases & Salts',
+    title: 'Acids, Bases & Salts Revision',
     subject: 'Science',
-    classLevel: '10',
+    classLevel: 10,
     className: '10',
     resourceType: 'text',
     description: 'Balancing chemical equations and pH scale in everyday life.',
-    content: 'Chemical Equations: Conservation of Mass dictates balancing atoms on LHS and RHS. Acid + Base -> Salt + Water (Neutralization). pH Scale: 7 is neutral (pure water), < 7 is acidic (lemon juice, vinegar), > 7 is basic (limewater).',
+    content: 'Chemistry Revision: Acids turn blue litmus red; bases turn red litmus blue. Neutralization: Acid + Base -> Salt + Water (HCl + NaOH -> NaCl + H2O). Soil pH testing for optimal crop fertility.',
     downloadSize: '40 KB',
-    duration: '—'
+    duration: '12 min'
   },
-  // 14. Secondary - Class 10
   {
-    title: 'Grammar Revision: Tenses & Voice Transformation',
+    title: 'English Active & Passive Voice Review',
     subject: 'English',
-    classLevel: '10',
+    classLevel: 10,
     className: '10',
     resourceType: 'audio',
-    description: 'Conversational rules for active/passive voice with quiz.',
-    content: 'Audio Lesson: Active: "The teacher graded the examination papers." Passive: "The examination papers were graded by the teacher." Remember the formula: Object + auxiliary be + past participle (V3) + by + Subject.',
+    description: 'Rules for converting active sentences to passive voice with examples.',
+    content: 'Grammar Capsule: Active: "The teacher graded the examination papers." Passive: "The examination papers were graded by the teacher." Remember to use past participle form (V3).',
     downloadSize: '90 KB',
     duration: '5 min'
+  }
+];
+
+export const seedQuizzes = [
+  {
+    title: 'Remedial Practice: Basic Fractions & Daily Math',
+    classLevel: 5,
+    subject: 'Mathematics',
+    targetCategory: 'remedial_support',
+    assignedStudentIds: [501],
+    questions: [
+      {
+        questionText: 'If a bhakri is divided equally among 4 children, what fraction does each child receive?',
+        options: ['1/2', '1/4', '3/4', '1/3'],
+        correctOptionIndex: 1,
+        explanation: 'Dividing 1 whole object into 4 equal shares yields the fraction 1/4 (one-fourth) per child.'
+      },
+      {
+        questionText: 'Which fraction is equivalent to half (1/2) a litre of milk?',
+        options: ['2/4 litre', '1/3 litre', '3/8 litre', '2/6 litre'],
+        correctOptionIndex: 0,
+        explanation: '2/4 simplifies to 1/2 when dividing both numerator and denominator by 2.'
+      },
+      {
+        questionText: 'A farmer spent ₹15 out of ₹60 saved for tractor diesel. What fraction did he spend?',
+        options: ['1/5', '1/4', '1/2', '3/10'],
+        correctOptionIndex: 1,
+        explanation: '15/60 simplifies to 1/4. He spent one-fourth of his diesel savings.'
+      }
+    ],
+    createdBy: 'Teacher S. Deshmukh'
+  },
+  {
+    title: 'Remedial Practice: Solving Linear Equations Step-by-Step',
+    classLevel: 8,
+    subject: 'Mathematics',
+    targetCategory: 'remedial_support',
+    assignedStudentIds: [801],
+    questions: [
+      {
+        questionText: 'Solve for x: 3x + 12 = 27',
+        options: ['x = 3', 'x = 5', 'x = 7', 'x = 9'],
+        correctOptionIndex: 1,
+        explanation: 'Subtract 12 from both sides: 3x = 15. Then divide by 3: x = 5.'
+      },
+      {
+        questionText: 'In the equation 5y - 7 = 18, what is the value of y?',
+        options: ['y = 4', 'y = 5', 'y = 6', 'y = 3'],
+        correctOptionIndex: 1,
+        explanation: 'Add 7 to both sides: 5y = 25. Divide by 5: y = 5.'
+      },
+      {
+        questionText: 'If 2x = 16, what is the value of (x + 3)?',
+        options: ['8', '11', '14', '19'],
+        correctOptionIndex: 1,
+        explanation: '2x = 16 gives x = 8. Adding 3 yields 8 + 3 = 11.'
+      }
+    ],
+    createdBy: 'Teacher S. Deshmukh'
+  },
+  {
+    title: 'Remedial Practice: Plant Nutrition & Photosynthesis',
+    classLevel: 7,
+    subject: 'Science',
+    targetCategory: 'remedial_support',
+    assignedStudentIds: [701],
+    questions: [
+      {
+        questionText: 'Which green pigment in leaves absorbs solar energy for photosynthesis?',
+        options: ['Hemoglobin', 'Chlorophyll', 'Carotene', 'Anthocyanin'],
+        correctOptionIndex: 1,
+        explanation: 'Chlorophyll is the green pigment in chloroplasts that traps light energy.'
+      },
+      {
+        questionText: 'What gas do crop leaves absorb from the atmosphere during daytime photosynthesis?',
+        options: ['Oxygen', 'Carbon Dioxide', 'Nitrogen', 'Methane'],
+        correctOptionIndex: 1,
+        explanation: 'Leaves absorb Carbon Dioxide (CO2) through stomata to manufacture sugars.'
+      },
+      {
+        questionText: 'What are the main outputs of the photosynthesis chemical reaction?',
+        options: ['Glucose and Oxygen', 'Nitrogen and Carbon', 'Water and Salt', 'Lactic Acid'],
+        correctOptionIndex: 0,
+        explanation: 'Photosynthesis synthesizes glucose energy storage and releases oxygen gas.'
+      }
+    ],
+    createdBy: 'Teacher S. Deshmukh'
   }
 ];

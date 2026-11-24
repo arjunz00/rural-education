@@ -11,6 +11,7 @@ import { Icon } from '../components/Icons';
 import { AttendanceGauge } from '../components/AttendanceGauge';
 import { PrintMarksheetModal } from '../components/PrintMarksheetModal';
 import { AudioPlayerModal } from '../components/AudioPlayerModal';
+import { RemedialQuizSection } from '../components/RemedialQuizSection';
 
 export const ParentStudentPortal = ({ subTab = 'all' }) => {
   const { currentUser, role } = useAuth();
@@ -304,7 +305,12 @@ export const ParentStudentPortal = ({ subTab = 'all' }) => {
         </div>
       )}
 
-      {/* 4. Teacher Outreach & Proactive Interventions History */}
+      {/* 4. Remedial Practice Quizzes & Micro-Assessments */}
+      {(subTab === 'all' || subTab === 'quizzes' || subTab === 'academic') && (
+        <RemedialQuizSection studentId={linkedStudentId} classLevel={student?.className} />
+      )}
+
+      {/* 5. Teacher Outreach & Proactive Interventions History */}
       {(subTab === 'all' || subTab === 'interventions') && (
         <div className="portal-section-card">
           <div className="section-card-header">

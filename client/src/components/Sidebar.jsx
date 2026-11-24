@@ -14,6 +14,7 @@ export const Sidebar = ({ currentPath, onNavigate }) => {
       { id: '/', label: 'My Safe Portal', icon: 'student', desc: 'Child Overview & Streak' },
       { id: '/portal/attendance', label: 'Attendance Calendar', icon: 'calendar', desc: 'Daily Logs & Absence Alerts' },
       { id: '/portal/academic', label: 'CCE Marksheet', icon: 'file-text', desc: 'Unit Test Results & Grades' },
+      { id: '/portal/quizzes', label: 'Remedial Quizzes', icon: 'check-circle', desc: 'Practice & Diagnostic Tests' },
       { id: '/portal/interventions', label: 'Teacher Outreach', icon: 'teacher', desc: 'Home Visits & Remarks' },
       { id: '/resources', label: 'Offline Study Packets', icon: 'book', desc: 'Audio Capsules & Notes' }
     ];

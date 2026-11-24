@@ -62,7 +62,7 @@ test('⚡ [AUTH] GET /api/auth/me with valid token returns current profile', asy
   assert.equal(res.body.user.role, 'teacher');
 });
 
-test('⚡ [RISK ENGINE] Accurately detects High Risk and Critical Alert for Rohan Pawar (#2)', async () => {
+test('⚡ [RISK ENGINE] Accurately detects High Risk and Critical Alert for Rohan Pawar (#701)', async () => {
   const res = await request(app)
     .get('/api/risk/assessments')
     .set('Authorization', `Bearer ${teacherToken}`);
@@ -70,7 +70,7 @@ test('⚡ [RISK ENGINE] Accurately detects High Risk and Critical Alert for Roha
   assert.equal(res.status, 200);
   assert.ok(res.body.assessments.length >= 3);
 
-  const rohanAssessment = res.body.assessments.find(a => a.studentId === 2);
+  const rohanAssessment = res.body.assessments.find(a => a.studentId === 701 || a.studentId === 2);
   assert.ok(rohanAssessment, 'Rohan Pawar assessment should exist');
   assert.equal(rohanAssessment.riskLevel, 'High');
   assert.equal(rohanAssessment.hasCriticalAlert, true);
@@ -85,9 +85,9 @@ test('⚡ [ATTENDANCE] Teacher can submit bulk daily roll call', async () => {
     .send({
       attendanceDate: testDate,
       records: [
-        { studentId: 1, status: 'present', notes: 'Active in class' },
-        { studentId: 2, status: 'absent', notes: 'Family field work' },
-        { studentId: 3, status: 'present', notes: '' }
+        { studentId: 801, status: 'present', notes: 'Active in class' },
+        { studentId: 701, status: 'absent', notes: 'Family field work' },
+        { studentId: 501, status: 'present', notes: '' }
       ]
     });
 

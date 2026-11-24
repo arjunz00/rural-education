@@ -6,13 +6,15 @@ import { Attendance } from './models/Attendance.js';
 import { AcademicRecord } from './models/AcademicRecord.js';
 import { Intervention } from './models/Intervention.js';
 import { LearningResource } from './models/LearningResource.js';
+import { Quiz } from './models/Quiz.js';
 import {
   getSeedUsers,
   seedStudents,
   getSeedAttendance,
   seedAcademicRecords,
   seedInterventions,
-  seedLearningResources
+  seedLearningResources,
+  seedQuizzes
 } from './seed/seedData.js';
 
 const PORT = process.env.PORT || 5000;
@@ -29,6 +31,7 @@ export const autoSeedIfEmpty = async () => {
       await AcademicRecord.insertMany(seedAcademicRecords);
       await Intervention.insertMany(seedInterventions);
       await LearningResource.insertMany(seedLearningResources);
+      await Quiz.insertMany(seedQuizzes);
       console.log('[AutoSeed] Successfully auto-seeded demo dataset into database!');
     } else {
       console.log(`[AutoSeed] Database already populated (${userCount} users present).`);

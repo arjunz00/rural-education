@@ -119,9 +119,9 @@ test('🔒 [PRIVACY] test_privacy_maintained_for_new_registrations: Newly regist
   assert.equal(ownRes.status, 200);
   assert.equal(ownRes.body.data.numericId, newlyCreatedStudentId);
 
-  // B. Attempt to access student #1 (Asha Jadhav) -> 403 Forbidden!
+  // B. Attempt to access student #801 (Asha Jadhav) -> 403 Forbidden!
   const otherRes = await request(app)
-    .get('/api/students/1')
+    .get('/api/students/801')
     .set('Authorization', `Bearer ${newlyRegisteredParentToken}`);
   assert.equal(otherRes.status, 403);
   assert.equal(otherRes.body.success, false);

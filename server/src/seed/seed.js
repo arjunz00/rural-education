@@ -5,13 +5,16 @@ import { Attendance } from '../models/Attendance.js';
 import { AcademicRecord } from '../models/AcademicRecord.js';
 import { Intervention } from '../models/Intervention.js';
 import { LearningResource } from '../models/LearningResource.js';
+import { Quiz } from '../models/Quiz.js';
+import { QuizSubmission } from '../models/QuizSubmission.js';
 import {
   getSeedUsers,
   seedStudents,
   getSeedAttendance,
   seedAcademicRecords,
   seedInterventions,
-  seedLearningResources
+  seedLearningResources,
+  seedQuizzes
 } from './seedData.js';
 
 const runSeed = async () => {
@@ -22,14 +25,16 @@ const runSeed = async () => {
   try {
     await connectDB();
 
-    console.log('[1/7] Cleaning existing collections...');
+    console.log('[1/8] Cleaning existing collections...');
     await Promise.all([
       User.deleteMany({}),
       Student.deleteMany({}),
       Attendance.deleteMany({}),
       AcademicRecord.deleteMany({}),
       Intervention.deleteMany({}),
-      LearningResource.deleteMany({})
+      LearningResource.deleteMany({}),
+      Quiz.deleteMany({}),
+      QuizSubmission.deleteMany({})
     ]);
     console.log('  ✓ Cleaned collections successfully.');
 
@@ -63,9 +68,13 @@ const runSeed = async () => {
     const interventions = await Intervention.insertMany(seedInterventions);
     console.log(`  ✓ Created ${interventions.length} teacher intervention logs.`);
 
-    console.log('[7/7] Seeding Low-Bandwidth Offline Learning Resources...');
+    console.log('[7/8] Seeding Low-Bandwidth Offline Learning Resources...');
     const resources = await LearningResource.insertMany(seedLearningResources);
     console.log(`  ✓ Created ${resources.length} learning resources (audio + text).`);
+
+    console.log('[8/8] Seeding Remedial Practice Quizzes & Diagnostic Tests...');
+    const quizzes = await Quiz.insertMany(seedQuizzes);
+    console.log(`  ✓ Created ${quizzes.length} remedial practice quizzes.`);
 
     console.log('\n======================================================');
     console.log('🎉 Database seeding completed successfully!');
