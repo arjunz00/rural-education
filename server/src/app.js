@@ -1,6 +1,10 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import path from 'path';
+import fs from 'fs';
+import { fileURLToPath } from 'url';
+
 import { bandwidthTracker } from './middleware/bandwidthTracker.js';
 import { errorHandler } from './middleware/errorHandler.js';
 
@@ -13,6 +17,10 @@ import interventionRoutes from './routes/interventionRoutes.js';
 import resourceRoutes from './routes/resourceRoutes.js';
 
 dotenv.config();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const clientDistPath = path.resolve(__dirname, '../../../client/dist');
 
 const app = express();
 
@@ -51,12 +59,20 @@ app.use('/api/interventions', interventionRoutes);
 app.use('/api/resources', resourceRoutes);
 
 // Catch-all 404 for undefined API routes
-app.use('/api/*', (req, res) => {
+app.all('/api/*', (req, res) => {
   res.status(404).json({
     success: false,
     error: `Endpoint not found: ${req.method} ${req.originalUrl}`
   });
 });
+
+// In production, serve the compiled React SPA static assets
+if (fs.existsSync(clientDistPath)) {
+  app.use(express.static(clientDistPath));
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(clientDistPath, 'index.html'));
+  });
+}
 
 // Centralized error handling
 app.use(errorHandler);
