@@ -1,4 +1,13 @@
-const API_BASE = import.meta.env.VITE_API_URL || '/api';
+let rawBase = (import.meta.env.VITE_API_URL || '').trim();
+if (rawBase.endsWith('/')) {
+  rawBase = rawBase.slice(0, -1);
+}
+if (rawBase && !rawBase.endsWith('/api')) {
+  rawBase = `${rawBase}/api`;
+}
+const API_BASE = rawBase || '/api';
+
+console.log('[GramShiksha Client] Active API Base URL:', API_BASE);
 
 /**
  * Robust fetch wrapper with authorization header, low-bandwidth metrics,
@@ -13,9 +22,13 @@ export async function apiRequest(endpoint, options = {}) {
     ...(options.headers || {})
   };
 
-  const response = await fetch(`${API_BASE}${endpoint}`, {
+  const url = `${API_BASE}${endpoint}`;
+
+  const response = await fetch(url, {
     ...options,
     headers
+  }).catch((networkErr) => {
+    throw new Error(`Cannot connect to backend API at ${url}. Please ensure backend is active.`);
   });
 
   // Extract payload size from header if present
