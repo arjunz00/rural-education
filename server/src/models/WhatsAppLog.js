@@ -29,7 +29,7 @@ const whatsAppLogSchema = new mongoose.Schema(
     },
     templateType: {
       type: String,
-      enum: ['daily_absence', 'consecutive_absence_alert', 'marksheet_summary', 'teacher_notice', 'custom'],
+      enum: ['daily_absence', 'consecutive_absence_alert', 'marksheet_summary', 'teacher_notice', 'attendance_appreciation', 'custom'],
       required: true,
       index: true
     },

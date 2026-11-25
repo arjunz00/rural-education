@@ -11,6 +11,55 @@ import {
 import { FAMILY_ROLES } from '../config/constants.js';
 
 /**
+ * Evaluates a student's real-time attendance trajectory, consecutive absence count, and risk zone
+ */
+export const evaluateStudentAttendanceRisk = async (studentId, targetDate) => {
+  const records = await Attendance.find({ studentId: Number(studentId) }).sort({ attendanceDate: 1 });
+  const totalDays = records.length;
+
+  let presentDays = 0;
+  let absentDays = 0;
+  let lateDays = 0;
+
+  records.forEach(r => {
+    if (r.status === 'present') presentDays++;
+    else if (r.status === 'absent') absentDays++;
+    else if (r.status === 'late') lateDays++;
+  });
+
+  const attendancePct = totalDays > 0
+    ? Math.round(((presentDays + lateDays * 0.5) / totalDays) * 100)
+    : 100;
+
+  let consecutiveAbsent = 0;
+  for (let i = records.length - 1; i >= 0; i--) {
+    if (records[i].status === 'absent') {
+      consecutiveAbsent++;
+    } else {
+      break;
+    }
+  }
+
+  // Find status on targetDate (if given) or latest record
+  const targetRecord = targetDate ? records.find(r => r.attendanceDate === targetDate) : records[records.length - 1];
+  const statusToday = targetRecord ? targetRecord.status : 'present';
+
+  const isHighRisk = attendancePct < 60 || consecutiveAbsent >= 3;
+  const isCritical = consecutiveAbsent >= 3;
+
+  return {
+    totalDays,
+    presentDays,
+    absentDays,
+    consecutiveAbsent,
+    attendancePct,
+    statusToday,
+    isHighRisk,
+    isCritical
+  };
+};
+
+/**
  * POST /api/whatsapp/send
  * Dispatches a single templated or custom WhatsApp alert to a student's guardian
  */
@@ -41,12 +90,34 @@ export const sendWhatsAppNotification = async (req, res, next) => {
       });
     }
 
+    // Evaluate student's live attendance & risk status
+    const riskInfo = await evaluateStudentAttendanceRisk(student.numericId, date);
+    let effectiveTemplate = templateType;
+
+    if (templateType === 'auto') {
+      if (riskInfo.statusToday === 'present') {
+        effectiveTemplate = 'attendance_appreciation';
+      } else if (riskInfo.isHighRisk || riskInfo.consecutiveAbsent >= 3) {
+        effectiveTemplate = 'consecutive_absence_alert';
+      } else {
+        effectiveTemplate = 'daily_absence';
+      }
+    } else if (templateType === 'daily_absence' && (riskInfo.isHighRisk || riskInfo.consecutiveAbsent >= 3)) {
+      // Escalate high-risk students to urgent dropout warning
+      effectiveTemplate = 'consecutive_absence_alert';
+    } else if ((templateType === 'daily_absence' || templateType === 'consecutive_absence_alert') && riskInfo.statusToday === 'present') {
+      // Present students do NOT get absence alerts; convert to appreciation notice
+      effectiveTemplate = 'attendance_appreciation';
+    }
+
+    const effectiveConsecutive = consecutiveDays || (riskInfo.consecutiveAbsent > 0 ? riskInfo.consecutiveAbsent : 3);
+
     // Optional marksheet lookup if template is marksheet_summary
     let marksList = 'Mathematics: 82/100, Science: 78/100, English: 74/100';
     let totalPct = 78;
     let grade = 'A';
 
-    if (templateType === 'marksheet_summary') {
+    if (effectiveTemplate === 'marksheet_summary') {
       const acads = await AcademicRecord.find({ studentId: student.numericId });
       if (acads.length > 0) {
         marksList = acads.map(a => `${a.subject}: ${a.marksObtained}/${a.maxMarks}`).join(', ');
@@ -57,14 +128,14 @@ export const sendWhatsAppNotification = async (req, res, next) => {
       }
     }
 
-    const messageBody = formatTemplateMessage(templateType, {
+    const messageBody = formatTemplateMessage(effectiveTemplate, {
       parentName: student.parentName,
       studentName: student.fullName,
       classLevel: student.className,
       date: date || new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
       schoolName: student.schoolName,
       teacherName: req.user?.fullName || 'Class Teacher',
-      consecutiveDays: consecutiveDays || 3,
+      consecutiveDays: effectiveConsecutive,
       marksList,
       totalPct,
       grade,
@@ -76,7 +147,7 @@ export const sendWhatsAppNotification = async (req, res, next) => {
       toPhone: cleanPhone,
       messageBody,
       studentId: student.numericId,
-      templateType
+      templateType: effectiveTemplate
     });
 
     const log = await WhatsAppLog.create({
@@ -85,7 +156,7 @@ export const sendWhatsAppNotification = async (req, res, next) => {
       classLevel: Number(student.className) || 8,
       parentName: student.parentName,
       parentPhone: cleanPhone,
-      templateType,
+      templateType: effectiveTemplate,
       messageBody,
       deliveryStatus: dispatchResult.deliveryStatus,
       triggeredBy: req.user?.fullName || 'Staff Administrator',
@@ -99,6 +170,8 @@ export const sendWhatsAppNotification = async (req, res, next) => {
       success: true,
       message: `WhatsApp alert successfully dispatched to ${student.parentName} (+${cleanPhone}).`,
       data: log,
+      effectiveTemplate,
+      riskLevel: riskInfo.isHighRisk ? 'High' : 'Normal',
       clickToChatUrl
     });
   } catch (err) {
@@ -142,6 +215,8 @@ export const sendBulkAbsenceAlerts = async (req, res, next) => {
     const students = await Student.find(stuFilter);
     const logs = [];
     let failedCount = 0;
+    let highRiskAlertsCount = 0;
+    let standardAbsenceNotesCount = 0;
 
     for (const student of students) {
       const cleanPhone = sanitizeIndianPhoneNumber(student.parentContact);
@@ -150,11 +225,24 @@ export const sendBulkAbsenceAlerts = async (req, res, next) => {
         continue;
       }
 
-      const messageBody = formatTemplateMessage('daily_absence', {
+      // Attendance & Risk Heuristic: High Risk students get Urgent Alert; single-day absent get gentle notice
+      const riskInfo = await evaluateStudentAttendanceRisk(student.numericId, date);
+      let targetTemplate = 'daily_absence';
+
+      if (riskInfo.isHighRisk || riskInfo.consecutiveAbsent >= 3) {
+        targetTemplate = 'consecutive_absence_alert';
+        highRiskAlertsCount++;
+      } else {
+        targetTemplate = 'daily_absence';
+        standardAbsenceNotesCount++;
+      }
+
+      const messageBody = formatTemplateMessage(targetTemplate, {
         parentName: student.parentName,
         studentName: student.fullName,
         classLevel: student.className,
         date: date,
+        consecutiveDays: riskInfo.consecutiveAbsent > 0 ? riskInfo.consecutiveAbsent : 3,
         schoolName: student.schoolName,
         teacherName: req.user?.fullName || 'Class Teacher'
       });
@@ -164,7 +252,7 @@ export const sendBulkAbsenceAlerts = async (req, res, next) => {
           toPhone: cleanPhone,
           messageBody,
           studentId: student.numericId,
-          templateType: 'daily_absence'
+          templateType: targetTemplate
         });
 
         const log = await WhatsAppLog.create({
@@ -173,10 +261,10 @@ export const sendBulkAbsenceAlerts = async (req, res, next) => {
           classLevel: Number(student.className) || 8,
           parentName: student.parentName,
           parentPhone: cleanPhone,
-          templateType: 'daily_absence',
+          templateType: targetTemplate,
           messageBody,
           deliveryStatus: dispatchResult.deliveryStatus,
-          triggeredBy: req.user?.fullName || 'Automated Morning Roll Call Rule',
+          triggeredBy: req.user?.fullName || 'Attendance-Aware Alert Dispatcher',
           providerMessageId: dispatchResult.providerMessageId,
           sentAt: new Date()
         });
@@ -189,11 +277,13 @@ export const sendBulkAbsenceAlerts = async (req, res, next) => {
 
     return res.status(200).json({
       success: true,
-      message: `Bulk WhatsApp absence alerts completed: ${logs.length} sent, ${failedCount} skipped/failed.`,
+      message: `Attendance-based WhatsApp dispatches complete: ${highRiskAlertsCount} urgent warnings sent to at-risk parents, ${standardAbsenceNotesCount} standard daily absence notes.`,
       dispatchedCount: logs.length,
       failedCount,
       summary: {
         sentCount: logs.length,
+        highRiskAlertsCount,
+        standardAbsenceNotesCount,
         skippedCount: failedCount
       },
       results: logs,
@@ -308,13 +398,32 @@ export const getClickToChatLink = async (req, res, next) => {
       });
     }
 
-    const messageText = formatTemplateMessage(templateType, {
+    // Dynamic Risk & Attendance evaluation for Click-to-Chat URL
+    const riskInfo = await evaluateStudentAttendanceRisk(student.numericId);
+    let effectiveTemplate = templateType;
+
+    if (templateType === 'auto') {
+      if (riskInfo.statusToday === 'present') {
+        effectiveTemplate = 'attendance_appreciation';
+      } else if (riskInfo.isHighRisk || riskInfo.consecutiveAbsent >= 3) {
+        effectiveTemplate = 'consecutive_absence_alert';
+      } else {
+        effectiveTemplate = 'daily_absence';
+      }
+    } else if (templateType === 'daily_absence' && (riskInfo.isHighRisk || riskInfo.consecutiveAbsent >= 3)) {
+      effectiveTemplate = 'consecutive_absence_alert';
+    } else if ((templateType === 'daily_absence' || templateType === 'consecutive_absence_alert') && riskInfo.statusToday === 'present') {
+      effectiveTemplate = 'attendance_appreciation';
+    }
+
+    const messageText = formatTemplateMessage(effectiveTemplate, {
       parentName: student.parentName,
       studentName: student.fullName,
       classLevel: student.className,
       date: new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
       schoolName: student.schoolName,
       teacherName: req.user?.fullName || 'Class Teacher',
+      consecutiveDays: riskInfo.consecutiveAbsent > 0 ? riskInfo.consecutiveAbsent : 3,
       messageText: customNotes || ''
     });
 
@@ -324,6 +433,10 @@ export const getClickToChatLink = async (req, res, next) => {
       success: true,
       url,
       clickToChatUrl: url,
+      effectiveTemplate,
+      isHighRisk: riskInfo.isHighRisk,
+      consecutiveAbsent: riskInfo.consecutiveAbsent,
+      statusToday: riskInfo.statusToday,
       messageText,
       parentContact: cleanPhone,
       recipientPhone: cleanPhone

@@ -322,8 +322,23 @@ export const TeacherDashboard = () => {
   };
 
   // WhatsApp Alert Handlers
-  const handleOpenWhatsAppModal = (student, template = 'daily_absence') => {
+  const handleOpenWhatsAppModal = (student, preferredTemplate = null) => {
     setTargetStudentForWA(student);
+    const entry = rollCall[student.numericId] || { status: 'present' };
+    const risk = riskMap[student.numericId];
+    const isAtRisk = risk?.hasCriticalAlert || risk?.riskLevel === 'High' || (risk?.consecutiveAbsent >= 3);
+
+    let template = preferredTemplate;
+    if (!template) {
+      if (entry.status === 'present') {
+        template = 'attendance_appreciation';
+      } else if (isAtRisk) {
+        template = 'consecutive_absence_alert';
+      } else {
+        template = 'daily_absence';
+      }
+    }
+
     setWaTemplateType(template);
     setWaCustomNotes('');
     setShowWhatsAppModal(true);
@@ -338,6 +353,8 @@ export const TeacherDashboard = () => {
     const schoolName = 'Zilla Parishad High School, Circle 4';
 
     switch (waTemplateType) {
+      case 'attendance_appreciation':
+        return `🌟 Namaste ${parent} ji,\n\nYour child *${student}* (Class ${targetStudentForWA.classLevel || selectedClass}) attended school on time today at ${schoolName}.\n\nConsistent daily attendance builds strong academic confidence and future success. Thank you for your continued support at home!\n\n_GramShiksha Digital Desk_`;
       case 'daily_absence':
         return `🙏 Namaste ${parent} ji,\n\nYour child *${student}* was marked *ABSENT* today (${dateStr}) at ${schoolName}.\n\nIf your child is unwell or facing travel difficulties, please inform Class Teacher *${teacherName}*.\n\n_GramShiksha Digital Attendance Desk_`;
       case 'consecutive_absence_alert':
@@ -924,18 +941,22 @@ export const TeacherDashboard = () => {
                           <button
                             type="button"
                             className="btn btn-sm"
-                            onClick={() => handleOpenWhatsAppModal(stu, entry.status === 'absent' ? 'daily_absence' : (hasCriticalAlert ? 'consecutive_absence_alert' : 'teacher_notice'))}
-                            title="Send WhatsApp notice to parent"
+                            onClick={() => handleOpenWhatsAppModal(stu, entry.status === 'absent' ? (hasCriticalAlert ? 'consecutive_absence_alert' : 'daily_absence') : 'attendance_appreciation')}
+                            title={
+                              entry.status === 'absent'
+                                ? (hasCriticalAlert ? "Send Urgent Dropout Warning Alert (High Risk)" : "Send Daily Absence Notice")
+                                : "Send Attendance Appreciation Note (Present Student)"
+                            }
                             style={{
                               padding: '0.3rem 0.55rem',
                               fontSize: '0.78rem',
-                              backgroundColor: entry.status === 'absent' || hasCriticalAlert ? '#25D366' : '#f0fdf4',
-                              color: entry.status === 'absent' || hasCriticalAlert ? '#ffffff' : '#15803d',
-                              borderColor: '#25D366',
+                              backgroundColor: hasCriticalAlert ? '#ef4444' : entry.status === 'absent' ? '#25D366' : '#f0fdf4',
+                              color: hasCriticalAlert || entry.status === 'absent' ? '#ffffff' : '#15803d',
+                              borderColor: hasCriticalAlert ? '#dc2626' : '#25D366',
                               fontWeight: entry.status === 'absent' || hasCriticalAlert ? 'bold' : 'normal'
                             }}
                           >
-                            💬 WA
+                            {hasCriticalAlert ? '🚨 WA Alert' : entry.status === 'absent' ? '💬 WA Absence' : '💬 WA Note'}
                           </button>
                           <button
                             type="button"
@@ -1273,6 +1294,66 @@ export const TeacherDashboard = () => {
                 </div>
               </div>
 
+              {/* Dynamic Attendance & Risk Context Banner */}
+              {(() => {
+                const entry = rollCall[targetStudentForWA.numericId] || { status: 'present' };
+                const risk = riskMap[targetStudentForWA.numericId];
+                const isHighRisk = risk?.hasCriticalAlert || risk?.riskLevel === 'High' || (risk?.consecutiveAbsent >= 3);
+
+                if (isHighRisk) {
+                  return (
+                    <div
+                      style={{
+                        backgroundColor: '#fef2f2',
+                        border: '1px solid #fecaca',
+                        color: '#991b1b',
+                        padding: '0.5rem 0.8rem',
+                        borderRadius: '6px',
+                        fontSize: '0.82rem',
+                        marginBottom: '0.75rem',
+                        fontWeight: '500'
+                      }}
+                    >
+                      🚨 <strong>High Risk / Chronic Dropout Alert:</strong> {risk?.consecutiveAbsent || 3} consecutive absences detected. Critical warning template is auto-selected to prompt immediate parent intervention.
+                    </div>
+                  );
+                } else if (entry.status === 'absent') {
+                  return (
+                    <div
+                      style={{
+                        backgroundColor: '#fffbeb',
+                        border: '1px solid #fde68a',
+                        color: '#92400e',
+                        padding: '0.5rem 0.8rem',
+                        borderRadius: '6px',
+                        fontSize: '0.82rem',
+                        marginBottom: '0.75rem',
+                        fontWeight: '500'
+                      }}
+                    >
+                      📅 <strong>Standard Daily Absence:</strong> Student is marked absent today. Standard polite notification is selected.
+                    </div>
+                  );
+                } else {
+                  return (
+                    <div
+                      style={{
+                        backgroundColor: '#f0fdf4',
+                        border: '1px solid #bbf7d0',
+                        color: '#166534',
+                        padding: '0.5rem 0.8rem',
+                        borderRadius: '6px',
+                        fontSize: '0.82rem',
+                        marginBottom: '0.75rem',
+                        fontWeight: '500'
+                      }}
+                    >
+                      ✓ <strong>Student is Present Today:</strong> Absence alerts are disabled. Positive attendance appreciation or general teacher notice will be sent.
+                    </div>
+                  );
+                }
+              })()}
+
               {/* Template Selector */}
               <div className="form-group mb-3">
                 <label className="font-semibold text-sm">Select Notification Scenario</label>
@@ -1281,8 +1362,9 @@ export const TeacherDashboard = () => {
                   value={waTemplateType}
                   onChange={(e) => setWaTemplateType(e.target.value)}
                 >
-                  <option value="daily_absence">📅 Daily Morning Absence Notice</option>
-                  <option value="consecutive_absence_alert">🚨 3+ Days Consecutive Absence Warning</option>
+                  <option value="attendance_appreciation">🌟 Attendance Appreciation (Present Learners)</option>
+                  <option value="daily_absence">📅 Daily Morning Absence Notice (Standard Absent)</option>
+                  <option value="consecutive_absence_alert">🚨 3+ Days Dropout Alert (High Risk Only)</option>
                   <option value="marksheet_summary">📊 CCE Exam Marksheet & Academic Summary</option>
                   <option value="teacher_notice">📢 Direct Teacher Notice / Homework Broadcast</option>
                 </select>

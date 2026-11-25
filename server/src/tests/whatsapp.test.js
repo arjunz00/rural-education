@@ -48,29 +48,83 @@ before(async () => {
 
 after(async () => {
   // Clean up any test WhatsApp logs created during test
-  await WhatsAppLog.deleteMany({ studentId: { $in: [801, 701] } });
+  await WhatsAppLog.deleteMany({ studentId: { $in: [801, 701, 802] } });
+  await Attendance.deleteOne({ studentId: 802, attendanceDate: testDate });
+  await Attendance.deleteOne({ studentId: 802, attendanceDate: '2026-11-26' });
   await mongoose.disconnect();
 });
 
-test('💬 [WHATSAPP DISPATCH] Daily morning absence alert creates log and returns valid wa.me link', async () => {
+test('💬 [WHATSAPP DISPATCH] Daily morning absence alert creates log and returns valid wa.me link for standard absence', async () => {
+  // Set student 802 as absent for single day on testDate
+  await Attendance.updateOne(
+    { studentId: 802, attendanceDate: testDate },
+    { $set: { status: 'absent' } },
+    { upsert: true }
+  );
+
   const res = await request(app)
     .post('/api/whatsapp/send')
     .set('Authorization', `Bearer ${teacherClass8Token}`)
     .send({
-      studentId: 801,
+      studentId: 802,
       templateType: 'daily_absence',
+      date: testDate,
       customNotes: 'Morning fever reported'
     });
 
   assert.equal(res.status, 200);
   assert.equal(res.body.success, true);
   assert.ok(res.body.data);
-  assert.equal(res.body.data.studentId, 801);
+  assert.equal(res.body.data.studentId, 802);
   assert.equal(res.body.data.templateType, 'daily_absence');
   assert.ok(['sent', 'delivered'].includes(res.body.data.deliveryStatus));
   assert.ok(res.body.clickToChatUrl);
   assert.ok(res.body.clickToChatUrl.startsWith('https://wa.me/91'));
   assert.ok(res.body.clickToChatUrl.includes('ABSENT'));
+});
+
+test('🎯 [ATTENDANCE-AWARE DYNAMIC ROUTING] Present students receive appreciation; high risk receives urgent warning', async () => {
+  // 1. Student 801 is High Risk (5 consecutive absences) -> should auto-escalate to consecutive_absence_alert
+  const highRiskRes = await request(app)
+    .post('/api/whatsapp/send')
+    .set('Authorization', `Bearer ${teacherClass8Token}`)
+    .send({
+      studentId: 801,
+      templateType: 'auto'
+    });
+  assert.equal(highRiskRes.status, 200);
+  assert.equal(highRiskRes.body.data.templateType, 'consecutive_absence_alert');
+  assert.ok(highRiskRes.body.data.messageBody.includes('URGENT ATTENDANCE ALERT'));
+
+  // 2. Student 802 marked Present today -> auto-routes to attendance_appreciation
+  await Attendance.updateOne(
+    { studentId: 802, attendanceDate: '2026-11-26' },
+    { $set: { status: 'present' } },
+    { upsert: true }
+  );
+  const presentRes = await request(app)
+    .post('/api/whatsapp/send')
+    .set('Authorization', `Bearer ${teacherClass8Token}`)
+    .send({
+      studentId: 802,
+      templateType: 'auto',
+      date: '2026-11-26'
+    });
+  assert.equal(presentRes.status, 200);
+  assert.equal(presentRes.body.data.templateType, 'attendance_appreciation');
+  assert.ok(presentRes.body.data.messageBody.includes('attended Class 8 on time today'));
+
+  // 3. Attempting to send daily_absence to a present student auto-converts to appreciation note
+  const convertRes = await request(app)
+    .post('/api/whatsapp/send')
+    .set('Authorization', `Bearer ${teacherClass8Token}`)
+    .send({
+      studentId: 802,
+      templateType: 'daily_absence',
+      date: '2026-11-26'
+    });
+  assert.equal(convertRes.status, 200);
+  assert.equal(convertRes.body.data.templateType, 'attendance_appreciation');
 });
 
 test('🚨 [WHATSAPP EARLY WARNING] 3+ Consecutive absence critical drop warning message', async () => {

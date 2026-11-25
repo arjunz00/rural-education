@@ -37,6 +37,9 @@ export const formatTemplateMessage = (templateType, data = {}) => {
   } = data;
 
   switch (templateType) {
+    case 'attendance_appreciation':
+      return `🌟 Namaste ${parentName}, your child ${studentName} attended Class ${classLevel} on time today at ${schoolName}. Consistent school attendance builds a bright academic foundation. Thank you for your continued support!`;
+
     case 'daily_absence':
       return `🙏 Namaste ${parentName}, your child ${studentName} was marked ABSENT today (${date}) at ${schoolName}. If your child is unwell or facing commute difficulties, please inform Class Teacher ${teacherName} at ${teacherPhone}.`;
 
