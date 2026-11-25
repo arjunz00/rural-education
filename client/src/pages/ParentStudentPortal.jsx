@@ -5,7 +5,8 @@ import {
   attendanceAPI,
   academicAPI,
   interventionsAPI,
-  resourcesAPI
+  resourcesAPI,
+  communicationsAPI
 } from '../services/api';
 import { Icon } from '../components/Icons';
 import { AttendanceGauge } from '../components/AttendanceGauge';
