@@ -71,6 +71,15 @@ const learningResourceSchema = new mongoose.Schema(
       type: String,
       default: 'Maharashtra State Bureau of Textbook Production (Balbharati)'
     },
+    uploadedByTeacherId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      default: null
+    },
+    uploadedByTeacherName: {
+      type: String,
+      default: null
+    },
     createdAt: {
       type: Date,
       default: Date.now

@@ -22,6 +22,9 @@ export const getStudents = async (req, res, next) => {
     if (className) {
       filter.className = className;
     }
+    if (req.query.enrollmentStatus) {
+      filter.enrollmentStatus = req.query.enrollmentStatus;
+    }
     if (search) {
       filter.$or = [
         { fullName: { $regex: search, $options: 'i' } },

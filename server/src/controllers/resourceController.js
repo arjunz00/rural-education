@@ -183,11 +183,13 @@ export const createResource = async (req, res, next) => {
       resourceType,
       description,
       content,
+      fileUrl,
       downloadSize,
       duration,
       durationSeconds,
       classLevel,
-      className
+      className,
+      authorOrBoard
     } = req.body;
 
     if (!title || !subject || !description) {
@@ -206,11 +208,15 @@ export const createResource = async (req, res, next) => {
       resourceType: resourceType || 'text',
       description: description.trim(),
       content: content || '',
-      downloadSize: downloadSize || '25 KB',
+      fileUrl: fileUrl || '',
+      downloadSize: downloadSize || '35 KB',
       duration: duration || '—',
       durationSeconds: durationSeconds || 180,
       classLevel: effectiveClass,
-      className: String(effectiveClass)
+      className: String(effectiveClass),
+      authorOrBoard: authorOrBoard || (req.user?.fullName ? `${req.user.fullName} (${req.user.schoolName || 'ZP School'})` : 'Maharashtra State Bureau of Textbook Production (Balbharati)'),
+      uploadedByTeacherId: req.user?._id || req.user?.id || null,
+      uploadedByTeacherName: req.user?.fullName || 'School Faculty'
     });
 
     const doc = resource.toObject ? resource.toObject() : { ...resource };
@@ -221,7 +227,39 @@ export const createResource = async (req, res, next) => {
 
     return res.status(201).json({
       success: true,
+      message: `Resource '${resource.title}' published successfully for Class ${effectiveClass}.`,
       data: doc
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const deleteResource = async (req, res, next) => {
+  try {
+    const resource = await LearningResource.findById(req.params.id);
+    if (!resource) {
+      return res.status(404).json({
+        success: false,
+        error: 'Learning resource not found.'
+      });
+    }
+
+    const isAuthor = resource.uploadedByTeacherId && resource.uploadedByTeacherId.toString() === req.user.id;
+    const isHeadmasterOrAdmin = ['headmaster', 'admin'].includes(req.user?.role);
+
+    if (!isAuthor && !isHeadmasterOrAdmin) {
+      return res.status(403).json({
+        success: false,
+        error: 'Forbidden: You can only delete learning resources created by you.'
+      });
+    }
+
+    await LearningResource.findByIdAndDelete(req.params.id);
+
+    return res.status(200).json({
+      success: true,
+      message: 'Learning resource deleted successfully.'
     });
   } catch (err) {
     next(err);

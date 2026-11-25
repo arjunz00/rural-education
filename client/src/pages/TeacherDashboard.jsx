@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { studentsAPI, attendanceAPI, riskAPI, interventionsAPI, communicationsAPI } from '../services/api';
+import { studentsAPI, attendanceAPI, riskAPI, interventionsAPI, communicationsAPI, teacherAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { Icon } from '../components/Icons';
 
@@ -9,6 +9,8 @@ export const TeacherDashboard = () => {
 
   const [selectedClass, setSelectedClass] = useState(defaultClass);
   const [students, setStudents] = useState([]);
+  const [pendingStudents, setPendingStudents] = useState([]);
+  const [enrollmentActionMsg, setEnrollmentActionMsg] = useState(null);
   const [attendanceDate, setAttendanceDate] = useState(() => new Date().toISOString().split('T')[0]);
   const [rollCall, setRollCall] = useState({}); // { [studentId]: { status: 'present', notes: '' } }
   const [riskMap, setRiskMap] = useState({}); // { [studentId]: riskObj }
@@ -54,14 +56,20 @@ export const TeacherDashboard = () => {
   const loadDashboardData = async () => {
     setIsLoading(true);
     try {
-      const [stuRes, attRes, riskRes] = await Promise.all([
+      const [stuRes, attRes, riskRes, pendingRes] = await Promise.all([
         studentsAPI.getStudents({ className: selectedClass }),
         attendanceAPI.getRecords({ date: attendanceDate }),
-        riskAPI.getAssessments()
+        riskAPI.getAssessments(),
+        teacherAPI.getPendingStudents().catch(() => ({ data: [] }))
       ]);
 
-      const stuList = stuRes.data || [];
+      // Filter out unverified pending students from daily roll call
+      const stuList = (stuRes.data || []).filter(s => s.enrollmentStatus !== 'pending' && s.enrollmentStatus !== 'rejected');
       setStudents(stuList);
+
+      // Scoped pending students for this class
+      const classPending = (pendingRes.data || []).filter(s => String(s.className) === String(selectedClass));
+      setPendingStudents(classPending);
 
       // Build rollCall map from existing records or default to 'present'
       const existingAtt = attRes.data || [];
@@ -85,6 +93,31 @@ export const TeacherDashboard = () => {
       console.error('Failed to load teacher dashboard:', err);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleApproveStudent = async (studentId) => {
+    try {
+      const res = await teacherAPI.approveStudent(studentId);
+      setPendingStudents(prev => prev.filter(s => s._id !== studentId && s.numericId !== studentId));
+      setEnrollmentActionMsg({ type: 'success', text: res.message || 'Student enrolled in class roll!' });
+      setTimeout(() => setEnrollmentActionMsg(null), 5000);
+      loadDashboardData();
+    } catch (err) {
+      setEnrollmentActionMsg({ type: 'error', text: err.message || 'Failed to enroll student.' });
+    }
+  };
+
+  const handleRejectStudent = async (studentId) => {
+    const reason = window.prompt('Please enter rejection reason (optional):', 'Address outside school catchment area');
+    if (reason === null) return;
+    try {
+      const res = await teacherAPI.rejectStudent(studentId, reason);
+      setPendingStudents(prev => prev.filter(s => s._id !== studentId && s.numericId !== studentId));
+      setEnrollmentActionMsg({ type: 'success', text: res.message || 'Student registration rejected.' });
+      setTimeout(() => setEnrollmentActionMsg(null), 5000);
+    } catch (err) {
+      setEnrollmentActionMsg({ type: 'error', text: err.message || 'Failed to reject student.' });
     }
   };
 
@@ -338,6 +371,104 @@ export const TeacherDashboard = () => {
           <span>{saveMessage.text}</span>
         </div>
       )}
+
+      {/* Enrollment Action Message */}
+      {enrollmentActionMsg && (
+        <div
+          className="login-error-alert mb-3"
+          style={{
+            backgroundColor: enrollmentActionMsg.type === 'success' ? '#ecfdf5' : '#fef2f2',
+            borderColor: enrollmentActionMsg.type === 'success' ? '#a7f3d0' : '#fecaca',
+            color: enrollmentActionMsg.type === 'success' ? '#047857' : '#b91c1c'
+          }}
+        >
+          <Icon name={enrollmentActionMsg.type === 'success' ? 'check-circle' : 'alert-triangle'} size={16} />
+          <span>{enrollmentActionMsg.text}</span>
+        </div>
+      )}
+
+      {/* Tier 2: Student Enrollment & Verification Desk */}
+      <div className="portal-section-card mb-4">
+        <div className="section-card-header">
+          <div className="flex items-center gap-2">
+            <Icon name="user-check" size={18} color="#0284c7" />
+            <h3>Class {selectedClass} Student Enrollment & Admission Desk</h3>
+          </div>
+          <div className="flex items-center gap-2">
+            {pendingStudents.length > 0 ? (
+              <span className="badge badge-warning" style={{ fontWeight: 'bold' }}>
+                🔔 {pendingStudents.length} Admission{pendingStudents.length > 1 ? 's' : ''} Awaiting Verification
+              </span>
+            ) : (
+              <span className="badge badge-success">✓ Roster Up-to-Date</span>
+            )}
+            <span className="badge badge-outline">Class Teacher Authority</span>
+          </div>
+        </div>
+
+        {pendingStudents.length === 0 ? (
+          <div className="empty-interventions-state py-3 text-center">
+            <Icon name="check-circle" size={20} color="#059669" />
+            <p className="font-semibold text-sm mt-1">No Pending Student Admissions</p>
+            <span className="text-xs text-muted">
+              All students registered for Class {selectedClass} are formally admitted into the official roll call.
+            </span>
+          </div>
+        ) : (
+          <div className="table-responsive">
+            <table className="portal-table">
+              <thead>
+                <tr>
+                  <th>Applicant Student</th>
+                  <th>Parent / Guardian</th>
+                  <th>Contact Number</th>
+                  <th>Hamlet / Wadi</th>
+                  <th>Status</th>
+                  <th>Class Teacher Decision</th>
+                </tr>
+              </thead>
+              <tbody>
+                {pendingStudents.map((st) => (
+                  <tr key={st._id || st.numericId} style={{ backgroundColor: '#f0f9ff' }}>
+                    <td>
+                      <div className="font-semibold text-primary">{st.fullName}</div>
+                      <span className="text-xs text-muted font-mono">Temp ID: #{st.numericId}</span>
+                    </td>
+                    <td>{st.parentName}</td>
+                    <td className="text-sm font-mono">{st.parentContact || 'No phone'}</td>
+                    <td className="text-xs text-muted">{st.hamletOrWadi || 'Catchment Area'}</td>
+                    <td>
+                      <span className="badge badge-warning" style={{ fontSize: '0.7rem', textTransform: 'uppercase' }}>
+                        Pending Verification
+                      </span>
+                    </td>
+                    <td>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          className="btn btn-primary btn-sm"
+                          style={{ padding: '0.25rem 0.6rem', fontSize: '0.8rem', backgroundColor: '#0284c7', borderColor: '#0284c7' }}
+                          onClick={() => handleApproveStudent(st._id || st.numericId)}
+                        >
+                          Verify & Enroll in Class Roll ✓
+                        </button>
+                        <button
+                          type="button"
+                          className="btn btn-outline btn-sm"
+                          style={{ padding: '0.25rem 0.6rem', fontSize: '0.8rem', color: '#dc2626', borderColor: '#fca5a5' }}
+                          onClick={() => handleRejectStudent(st._id || st.numericId)}
+                        >
+                          Reject ✕
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
 
       {/* Daily Roll Call Matrix */}
       <div className="portal-section-card">

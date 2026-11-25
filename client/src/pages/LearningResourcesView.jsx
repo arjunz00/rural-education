@@ -23,6 +23,76 @@ export const LearningResourcesView = () => {
   const [activeTextbookResource, setActiveTextbookResource] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Teacher Resource Creator State
+  const isStaff = ['teacher', 'headmaster', 'admin'].includes(currentUser?.role);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [newResource, setNewResource] = useState({
+    title: '',
+    classLevel: selectedClass,
+    subject: 'Mathematics',
+    resourceType: 'textbook',
+    description: '',
+    content: '',
+    fileUrl: ''
+  });
+  const [isPublishing, setIsPublishing] = useState(false);
+  const [authoringMsg, setAuthoringMsg] = useState(null);
+
+  const handleOpenAddModal = () => {
+    setNewResource({
+      title: '',
+      classLevel: selectedClass,
+      subject: 'Mathematics',
+      resourceType: 'textbook',
+      description: '',
+      content: '',
+      fileUrl: ''
+    });
+    setShowAddModal(true);
+  };
+
+  const handlePublishResource = async (e) => {
+    e.preventDefault();
+    if (!newResource.title || !newResource.description) return;
+
+    setIsPublishing(true);
+    try {
+      const payload = {
+        title: newResource.title,
+        classLevel: Number(newResource.classLevel),
+        subject: newResource.subject,
+        resourceType: newResource.resourceType,
+        description: newResource.description,
+        content: newResource.content || newResource.description,
+        fileUrl: newResource.fileUrl || '',
+        downloadSize: newResource.resourceType === 'audio' ? '85 KB' : '35 KB',
+        duration: newResource.resourceType === 'audio' ? '4 min' : '5 min read'
+      };
+
+      const res = await resourcesAPI.create(payload);
+      setShowAddModal(false);
+      setAuthoringMsg({ type: 'success', text: `✅ ${res.message || 'Resource published successfully!'}` });
+      setTimeout(() => setAuthoringMsg(null), 5000);
+      fetchResources();
+    } catch (err) {
+      alert(`Failed to publish learning resource: ${err.message}`);
+    } finally {
+      setIsPublishing(false);
+    }
+  };
+
+  const handleDeleteResource = async (id) => {
+    if (!window.confirm('Are you sure you want to remove this learning resource from the class repository?')) return;
+    try {
+      await resourcesAPI.delete(id);
+      setAuthoringMsg({ type: 'success', text: '✅ Learning resource removed successfully.' });
+      setTimeout(() => setAuthoringMsg(null), 5000);
+      fetchResources();
+    } catch (err) {
+      alert(`Failed to delete resource: ${err.message}`);
+    }
+  };
+
   useEffect(() => {
     fetchResources();
   }, [selectedClass, typeFilter]);
@@ -123,8 +193,34 @@ export const LearningResourcesView = () => {
               <option value="text">📄 Text Notes & Revision</option>
             </select>
           </div>
+
+          {/* Teacher & Staff Resource Publishing Action */}
+          {isStaff && (
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={handleOpenAddModal}
+              style={{ backgroundColor: '#4f46e5', borderColor: '#4f46e5' }}
+            >
+              <Icon name="plus" size={16} /> + Add Learning Resource
+            </button>
+          )}
         </div>
       </div>
+
+      {authoringMsg && (
+        <div
+          className="login-error-alert mb-3"
+          style={{
+            backgroundColor: authoringMsg.type === 'success' ? '#ecfdf5' : '#fef2f2',
+            borderColor: authoringMsg.type === 'success' ? '#a7f3d0' : '#fecaca',
+            color: authoringMsg.type === 'success' ? '#047857' : '#b91c1c'
+          }}
+        >
+          <Icon name={authoringMsg.type === 'success' ? 'check-circle' : 'alert-triangle'} size={16} />
+          <span>{authoringMsg.text}</span>
+        </div>
+      )}
 
       {/* Class Indicator Bar */}
       <div className="grade-wings-container" style={{ margin: '0 0 1.25rem 0' }}>
@@ -181,6 +277,17 @@ export const LearningResourcesView = () => {
                   <div className="flex items-center gap-2">
                     <span className="file-size-pill font-mono">💾 {res.downloadSize}</span>
                     <span className="duration-pill text-xs text-muted">⏱️ {res.duration}</span>
+                    {((res.uploadedByTeacherId && String(res.uploadedByTeacherId) === String(currentUser?._id || currentUser?.id)) || currentUser?.role === 'headmaster' || currentUser?.role === 'admin') && (
+                      <button
+                        type="button"
+                        className="btn-icon text-muted"
+                        title="Delete this resource"
+                        style={{ color: '#ef4444', marginLeft: '0.25rem', padding: '2px' }}
+                        onClick={() => handleDeleteResource(res._id)}
+                      >
+                        <Icon name="x-circle" size={15} />
+                      </button>
+                    )}
                   </div>
                 </div>
 
@@ -342,6 +449,138 @@ export const LearningResourcesView = () => {
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Teacher / Staff Add Learning Resource Modal */}
+      {showAddModal && (
+        <div className="modal-backdrop" onClick={() => setShowAddModal(false)}>
+          <div className="modal-content" style={{ maxWidth: '640px' }} onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <div className="flex items-center gap-2">
+                <Icon name="book" size={18} color="#4f46e5" />
+                <h3 className="font-bold">Publish New Learning Resource</h3>
+              </div>
+              <button className="btn-icon" onClick={() => setShowAddModal(false)}>
+                <Icon name="x-circle" size={18} />
+              </button>
+            </div>
+            <form onSubmit={handlePublishResource}>
+              <div className="modal-body">
+                <p className="text-xs text-muted mb-3">
+                  Publish curriculum-aligned chapters, audio lessons, or revision notes directly to Class {newResource.classLevel}'s portal.
+                </p>
+
+                <div className="form-group mb-3">
+                  <label htmlFor="resTitle" className="form-label font-bold text-xs">Resource Title *</label>
+                  <input
+                    id="resTitle"
+                    type="text"
+                    className="form-control"
+                    placeholder="e.g. Chapter 4: Fractions and Decimals"
+                    value={newResource.title}
+                    onChange={e => setNewResource({ ...newResource, title: e.target.value })}
+                    required
+                  />
+                </div>
+
+                <div className="flex gap-2 mb-3">
+                  <div className="form-group flex-1">
+                    <label htmlFor="resClass" className="form-label font-bold text-xs">Target Class *</label>
+                    <select
+                      id="resClass"
+                      className="form-control"
+                      value={newResource.classLevel}
+                      onChange={e => setNewResource({ ...newResource, classLevel: e.target.value })}
+                    >
+                      {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(c => (
+                        <option key={c} value={String(c)}>Class {c}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="form-group flex-1">
+                    <label htmlFor="resSubject" className="form-label font-bold text-xs">Subject *</label>
+                    <select
+                      id="resSubject"
+                      className="form-control"
+                      value={newResource.subject}
+                      onChange={e => setNewResource({ ...newResource, subject: e.target.value })}
+                    >
+                      {['Mathematics', 'Science', 'English', 'EVS', 'Social Science', 'Marathi'].map(s => (
+                        <option key={s} value={s}>{s}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="form-group flex-1">
+                    <label htmlFor="resType" className="form-label font-bold text-xs">Format *</label>
+                    <select
+                      id="resType"
+                      className="form-control"
+                      value={newResource.resourceType}
+                      onChange={e => setNewResource({ ...newResource, resourceType: e.target.value })}
+                    >
+                      <option value="textbook">📖 Digital Textbook</option>
+                      <option value="audio">🎧 Audio Capsule</option>
+                      <option value="notes">📝 Revision Notes</option>
+                      <option value="worksheet">📋 Practice Worksheet</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="form-group mb-3">
+                  <label htmlFor="resDesc" className="form-label font-bold text-xs">Short Description / Syllabus Context *</label>
+                  <input
+                    id="resDesc"
+                    type="text"
+                    className="form-control"
+                    placeholder="e.g. Fundamental visual breakdown of numerators and denominators for rural self-study."
+                    value={newResource.description}
+                    onChange={e => setNewResource({ ...newResource, description: e.target.value })}
+                    required
+                  />
+                </div>
+
+                <div className="form-group mb-3">
+                  <label htmlFor="resContent" className="form-label font-bold text-xs">Chapter Notes / Audio Transcript / Study Text *</label>
+                  <textarea
+                    id="resContent"
+                    className="form-control"
+                    rows={5}
+                    placeholder="Type or paste the chapter summary, key concepts, formulas, or spoken lesson transcript..."
+                    value={newResource.content}
+                    onChange={e => setNewResource({ ...newResource, content: e.target.value })}
+                    required
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="resFileUrl" className="form-label font-bold text-xs">Digital Textbook / Audio URL (Optional Link)</label>
+                  <input
+                    id="resFileUrl"
+                    type="url"
+                    className="form-control font-mono text-xs"
+                    placeholder="https://... (Optional official State Board PDF / MP3 stream link)"
+                    value={newResource.fileUrl}
+                    onChange={e => setNewResource({ ...newResource, fileUrl: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <div className="modal-footer flex justify-between items-center">
+                <span className="text-xs text-muted">Author: {currentUser?.fullName} ({currentUser?.role})</span>
+                <div className="flex gap-2">
+                  <button type="button" className="btn btn-secondary" onClick={() => setShowAddModal(false)}>
+                    Cancel
+                  </button>
+                  <button type="submit" className="btn btn-primary" disabled={isPublishing}>
+                    {isPublishing ? 'Publishing...' : `Publish to Class ${newResource.classLevel} →`}
+                  </button>
+                </div>
+              </div>
+            </form>
           </div>
         </div>
       )}

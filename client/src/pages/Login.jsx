@@ -146,7 +146,11 @@ export const Login = ({ initialRole = 'teacher', onLoginSuccess }) => {
         onLoginSuccess(user);
       }
     } catch (err) {
-      setLocalError(err.message || 'Login failed. Please verify credentials.');
+      if (err.code === 'TEACHER_APPROVAL_PENDING' || (err.message && err.message.includes('awaiting verification'))) {
+        setLocalError('⏳ Verification In Progress: Your teacher credentials have been registered and are pending approval by Principal Dr. K. Patil. Please contact the school office.');
+      } else {
+        setLocalError(err.message || 'Login failed. Please verify credentials.');
+      }
     }
   };
 
@@ -186,13 +190,18 @@ export const Login = ({ initialRole = 'teacher', onLoginSuccess }) => {
     }
 
     try {
-      const user = await register(payload);
-      setRegSuccessMsg('Account registered successfully! Redirecting to portal...');
-      setTimeout(() => {
-        if (onLoginSuccess) {
-          onLoginSuccess(user);
-        }
-      }, 500);
+      const res = await register(payload);
+      if (activeRoleTab === 'teacher') {
+        setRegSuccessMsg('✅ Registration Submitted! Your teacher credentials have been registered and are awaiting verification by Principal Dr. K. Patil. You can sign in once verified.');
+        setAuthMode('login');
+      } else {
+        setRegSuccessMsg('Account registered successfully! Redirecting to portal...');
+        setTimeout(() => {
+          if (onLoginSuccess) {
+            onLoginSuccess(res?.user || res);
+          }
+        }, 500);
+      }
     } catch (err) {
       setLocalError(err.message || 'Registration failed. Please review fields.');
     }

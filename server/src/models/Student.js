@@ -32,6 +32,28 @@ const studentSchema = new mongoose.Schema(
       type: String,
       trim: true,
       default: ''
+    },
+    enrollmentStatus: {
+      type: String,
+      enum: ['pending', 'enrolled', 'rejected'],
+      default: 'enrolled',
+      index: true
+    },
+    verifiedByTeacher: {
+      type: String,
+      default: null
+    },
+    verifiedAt: {
+      type: Date,
+      default: null
+    },
+    rejectionReason: {
+      type: String,
+      default: null
+    },
+    hamletOrWadi: {
+      type: String,
+      default: ''
     }
   },
   {

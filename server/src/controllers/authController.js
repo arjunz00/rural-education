@@ -148,7 +148,8 @@ export const register = async (req, res, next) => {
           className: targetClass,
           schoolName: targetSchool,
           parentName: fullName.trim(),
-          parentContact: parentContact?.trim() || ''
+          parentContact: parentContact?.trim() || '',
+          enrollmentStatus: 'pending'
         });
       }
 
@@ -171,7 +172,8 @@ export const register = async (req, res, next) => {
         className: targetClass,
         schoolName: targetSchool,
         parentName: guardian,
-        parentContact: parentContact?.trim() || ''
+        parentContact: parentContact?.trim() || '',
+        enrollmentStatus: 'pending'
       });
 
       studentId = linkedStudent.numericId;
@@ -201,6 +203,7 @@ export const register = async (req, res, next) => {
       parentContact: parentContact?.trim() || '',
       institutionalVerificationKey: institutionalVerificationKey?.trim() || null,
       studentId: studentId,
+      approvalStatus: role === ROLES.TEACHER ? 'pending' : 'approved',
       isActive: true
     });
 
@@ -220,6 +223,7 @@ export const register = async (req, res, next) => {
         schoolName: user.schoolName,
         assignedClass: user.assignedClass,
         studentId: user.studentId,
+        approvalStatus: user.approvalStatus,
         linkedStudent
       }
     });
@@ -268,6 +272,25 @@ export const login = async (req, res, next) => {
       });
     }
 
+    if (user.role === ROLES.TEACHER && user.approvalStatus === 'pending') {
+      return res.status(403).json({
+        success: false,
+        error: '⏳ Account Pending: Your teacher registration is awaiting verification by Principal Dr. K. Patil.',
+        code: 'TEACHER_APPROVAL_PENDING',
+        approvalStatus: 'pending'
+      });
+    }
+
+    if (user.role === ROLES.TEACHER && user.approvalStatus === 'rejected') {
+      return res.status(403).json({
+        success: false,
+        error: 'Your teacher registration was not approved. Please contact the school office.',
+        code: 'TEACHER_APPROVAL_REJECTED',
+        approvalStatus: 'rejected',
+        reason: user.rejectionReason
+      });
+    }
+
     const token = generateToken(user);
 
     // If parent or student, also fetch linked student info
@@ -289,6 +312,8 @@ export const login = async (req, res, next) => {
         schoolName: user.schoolName,
         assignedClass: user.assignedClass,
         studentId: user.studentId,
+        approvalStatus: user.approvalStatus,
+        approvedBy: user.approvedBy,
         linkedStudent
       }
     });
@@ -323,6 +348,8 @@ export const getMe = async (req, res, next) => {
         schoolName: user.schoolName,
         assignedClass: user.assignedClass,
         studentId: user.studentId,
+        approvalStatus: user.approvalStatus,
+        approvedBy: user.approvedBy,
         linkedStudent
       }
     });

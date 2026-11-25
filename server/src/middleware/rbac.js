@@ -33,6 +33,11 @@ export const requireRole = (allowedRoles = []) => {
 export const requireStaff = requireRole(STAFF_ROLES);
 
 /**
+ * Middleware for Principal/Headmaster and District Admin routes
+ */
+export const requireHeadmasterOrAdmin = requireRole([ROLES.HEADMASTER, ROLES.ADMIN]);
+
+/**
  * Critical Privacy Middleware: Enforces strict data isolation for Parents and Students.
  * If user is 'parent' or 'student', they can NEVER access any other student's data.
  * Any attempt to access another student's ID returns 403 Forbidden.

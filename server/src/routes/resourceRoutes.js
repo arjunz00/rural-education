@@ -3,6 +3,7 @@ import {
   getResources,
   getResourceById,
   createResource,
+  deleteResource,
   streamResourceAudio,
   downloadResourceAudio
 } from '../controllers/resourceController.js';
@@ -21,5 +22,6 @@ router.use(authenticateToken);
 router.get('/', getResources);
 router.get('/:id', getResourceById);
 router.post('/', requireStaff, createResource);
+router.delete('/:id', requireStaff, deleteResource);
 
 export default router;

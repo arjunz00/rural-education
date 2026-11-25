@@ -156,8 +156,33 @@ export const resourcesAPI = {
     method: 'POST',
     body: JSON.stringify(data)
   }),
+  delete: (id) => apiRequest(`/resources/${id}`, {
+    method: 'DELETE'
+  }),
   getAudioUrl: (id) => `${API_BASE}/resources/${id}/audio`,
   getDownloadUrl: (id) => `${API_BASE}/resources/${id}/download`
+};
+
+export const adminAPI = {
+  getPendingTeachers: () => apiRequest('/admin/pending-teachers'),
+  approveTeacher: (id) => apiRequest(`/admin/teachers/${id}/approve`, {
+    method: 'PATCH'
+  }),
+  rejectTeacher: (id, reason) => apiRequest(`/admin/teachers/${id}/reject`, {
+    method: 'PATCH',
+    body: JSON.stringify({ reason })
+  })
+};
+
+export const teacherAPI = {
+  getPendingStudents: () => apiRequest('/teacher/pending-students'),
+  approveStudent: (id) => apiRequest(`/teacher/students/${id}/approve`, {
+    method: 'PATCH'
+  }),
+  rejectStudent: (id, reason) => apiRequest(`/teacher/students/${id}/reject`, {
+    method: 'PATCH',
+    body: JSON.stringify({ reason })
+  })
 };
 
 export const quizzesAPI = {

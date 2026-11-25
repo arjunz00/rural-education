@@ -46,14 +46,26 @@ export const authenticateToken = async (req, res, next) => {
       });
     }
 
+    if (user.role === 'teacher' && user.approvalStatus === 'pending') {
+      return res.status(403).json({
+        success: false,
+        error: '⏳ Account Pending: Your teacher registration is awaiting verification by Principal Dr. K. Patil.',
+        code: 'TEACHER_APPROVAL_PENDING',
+        approvalStatus: 'pending'
+      });
+    }
+
     req.user = {
       id: user._id.toString(),
+      _id: user._id,
       username: user.username,
       email: user.email,
       role: user.role,
       fullName: user.fullName,
       schoolName: user.schoolName,
-      studentId: user.studentId
+      assignedClass: user.assignedClass,
+      studentId: user.studentId,
+      approvalStatus: user.approvalStatus
     };
 
     next();

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { attendanceAPI, riskAPI, interventionsAPI } from '../services/api';
+import { attendanceAPI, riskAPI, interventionsAPI, adminAPI } from '../services/api';
 import { Icon } from '../components/Icons';
 import { AttendanceGauge } from '../components/AttendanceGauge';
 
@@ -7,6 +7,8 @@ export const HeadmasterDashboard = () => {
   const [summary, setSummary] = useState(null);
   const [riskList, setRiskList] = useState([]);
   const [interventions, setInterventions] = useState([]);
+  const [pendingTeachers, setPendingTeachers] = useState([]);
+  const [actionMessage, setActionMessage] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -16,19 +18,45 @@ export const HeadmasterDashboard = () => {
   const loadData = async () => {
     setIsLoading(true);
     try {
-      const [sumRes, riskRes, intRes] = await Promise.all([
+      const [sumRes, riskRes, intRes, teachRes] = await Promise.all([
         attendanceAPI.getSummary(),
         riskAPI.getAssessments(),
-        interventionsAPI.getAll()
+        interventionsAPI.getAll(),
+        adminAPI.getPendingTeachers().catch(() => ({ data: [] }))
       ]);
 
       if (sumRes.success) setSummary(sumRes.summary);
       if (riskRes.success) setRiskList(riskRes.assessments || []);
       if (intRes.success) setInterventions(intRes.data || []);
+      if (teachRes.success) setPendingTeachers(teachRes.data || []);
     } catch (err) {
       console.error('Failed to load headmaster data:', err);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleApproveTeacher = async (teacherId) => {
+    try {
+      const res = await adminAPI.approveTeacher(teacherId);
+      setPendingTeachers(prev => prev.filter(t => t._id !== teacherId));
+      setActionMessage({ type: 'success', text: res.message || 'Teacher approved and activated successfully!' });
+      setTimeout(() => setActionMessage(null), 5000);
+    } catch (err) {
+      setActionMessage({ type: 'error', text: err.message || 'Failed to approve teacher.' });
+    }
+  };
+
+  const handleRejectTeacher = async (teacherId) => {
+    const reason = window.prompt('Please enter reason for rejecting this registration (optional):', 'Incomplete official credentials');
+    if (reason === null) return;
+    try {
+      const res = await adminAPI.rejectTeacher(teacherId, reason);
+      setPendingTeachers(prev => prev.filter(t => t._id !== teacherId));
+      setActionMessage({ type: 'success', text: res.message || 'Teacher registration rejected.' });
+      setTimeout(() => setActionMessage(null), 5000);
+    } catch (err) {
+      setActionMessage({ type: 'error', text: err.message || 'Failed to reject teacher.' });
     }
   };
 
@@ -112,6 +140,114 @@ export const HeadmasterDashboard = () => {
           <span className="kpi-value text-success">{interventions.length}</span>
           <span className="kpi-sub">Active teacher outreaches</span>
         </div>
+      </div>
+
+      {/* Action Notification Banner */}
+      {actionMessage && (
+        <div
+          className="login-error-alert mb-3"
+          style={{
+            backgroundColor: actionMessage.type === 'success' ? '#ecfdf5' : '#fef2f2',
+            borderColor: actionMessage.type === 'success' ? '#a7f3d0' : '#fecaca',
+            color: actionMessage.type === 'success' ? '#047857' : '#b91c1c'
+          }}
+        >
+          <Icon name={actionMessage.type === 'success' ? 'check-circle' : 'alert-triangle'} size={16} />
+          <span>{actionMessage.text}</span>
+        </div>
+      )}
+
+      {/* Tier 1: Institutional Approvals Desk (Principal Verifies Teachers) */}
+      <div className="portal-section-card mb-4">
+        <div className="section-card-header">
+          <div className="flex items-center gap-2">
+            <Icon name="shield" size={18} color="#4f46e5" />
+            <h3>Institutional Faculty Approvals Desk</h3>
+          </div>
+          <div className="flex items-center gap-2">
+            {pendingTeachers.length > 0 ? (
+              <span className="badge badge-warning" style={{ fontWeight: 'bold' }}>
+                ⏳ {pendingTeachers.length} Verification{pendingTeachers.length > 1 ? 's' : ''} Pending
+              </span>
+            ) : (
+              <span className="badge badge-success">✓ All Faculty Verified</span>
+            )}
+            <span className="badge badge-outline">Tier 1 Principal Authority</span>
+          </div>
+        </div>
+
+        {pendingTeachers.length === 0 ? (
+          <div className="empty-interventions-state py-4 text-center">
+            <Icon name="check-circle" size={24} color="#059669" />
+            <p className="font-semibold text-sm mt-1">No Pending Teacher Registrations</p>
+            <span className="text-xs text-muted">
+              All class teachers across primary, middle, and secondary wings have been verified and activated.
+            </span>
+          </div>
+        ) : (
+          <div className="table-responsive">
+            <table className="portal-table">
+              <thead>
+                <tr>
+                  <th>Teacher Name</th>
+                  <th>Official Email</th>
+                  <th>Assigned Grade</th>
+                  <th>Registration Date</th>
+                  <th>Status</th>
+                  <th>Institutional Decision</th>
+                </tr>
+              </thead>
+              <tbody>
+                {pendingTeachers.map((teacher) => (
+                  <tr key={teacher._id} style={{ backgroundColor: '#fffbeb' }}>
+                    <td>
+                      <div className="font-semibold text-primary">{teacher.fullName}</div>
+                      <span className="text-xs text-muted font-mono">@{teacher.username}</span>
+                    </td>
+                    <td className="text-sm font-mono">{teacher.email}</td>
+                    <td>
+                      <span className="class-badge-pill" style={{ borderColor: 'var(--primary)', color: 'var(--primary)' }}>
+                        Class {teacher.assignedClass || 'General'}
+                      </span>
+                    </td>
+                    <td className="text-xs text-muted">
+                      {teacher.createdAt ? new Date(teacher.createdAt).toLocaleDateString('en-IN', {
+                        day: 'numeric',
+                        month: 'short',
+                        year: 'numeric'
+                      }) : 'Recent'}
+                    </td>
+                    <td>
+                      <span className="badge badge-warning" style={{ textTransform: 'uppercase', fontSize: '0.7rem' }}>
+                        Pending Approval
+                      </span>
+                    </td>
+                    <td>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          className="btn btn-primary btn-sm"
+                          style={{ padding: '0.25rem 0.6rem', fontSize: '0.8rem', backgroundColor: '#059669', borderColor: '#059669' }}
+                          onClick={() => handleApproveTeacher(teacher._id)}
+                        >
+                          Approve & Activate ✓
+                        </button>
+                        <button
+                          type="button"
+                          className="btn btn-outline btn-sm"
+                          style={{ padding: '0.25rem 0.6rem', fontSize: '0.8rem', color: '#dc2626', borderColor: '#fca5a5' }}
+                          onClick={() => handleRejectTeacher(teacher._id)}
+                        >
+                          Reject ✕
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
       {/* Chronic Dropout Warning Radar List */}
