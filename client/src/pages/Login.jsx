@@ -255,12 +255,6 @@ export const Login = ({ initialRole = 'teacher', onLoginSuccess }) => {
               <Icon name="school" size={13} /> {activeDemo.school}
             </p>
           </div>
-          {authMode === 'login' && (
-            <div className="quick-fill-chip" onClick={() => switchRoleDemo(activeRoleTab)}>
-              <Icon name="zap" size={14} color="#f59e0b" />
-              <span>1-Click Fast Sign In ⚡ ({activeDemo.username})</span>
-            </div>
-          )}
         </div>
 
         {/* Distinct Class Teacher Presets (Shown in Teacher Tab) */}
