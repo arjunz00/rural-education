@@ -1,5 +1,7 @@
+import http from 'http';
 import app from './app.js';
 import { connectDB } from './config/db.js';
+import { initSocket } from './socket.js';
 import { User } from './models/User.js';
 import { Student } from './models/Student.js';
 import { Attendance } from './models/Attendance.js';
@@ -50,9 +52,15 @@ const startServer = async () => {
   try {
     await connectDB();
     await autoSeedIfEmpty();
-    app.listen(PORT, () => {
+
+    const server = http.createServer(app);
+    const io = initSocket(server);
+    app.set('io', io);
+
+    server.listen(PORT, () => {
       console.log(`[Rural Education API] Server running on http://localhost:${PORT}`);
       console.log(`[Rural Education API] Health Check: http://localhost:${PORT}/api/health`);
+      console.log(`[Rural Education API] Socket.IO real-time engine active`);
     });
   } catch (err) {
     console.error(`[Server Error] Failed to start server: ${err.message}`);

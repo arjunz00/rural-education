@@ -1,7 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { studentsAPI, attendanceAPI, riskAPI, interventionsAPI, communicationsAPI, teacherAPI, whatsappAPI } from '../services/api';
+import {
+  studentsAPI,
+  attendanceAPI,
+  riskAPI,
+  interventionsAPI,
+  communicationsAPI,
+  teacherAPI,
+  whatsappAPI,
+  twilioAPI
+} from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { Icon } from '../components/Icons';
+import {
+  initSocket,
+  joinClassRoom,
+  onInboundParentMessage,
+  onWhatsAppStatusUpdate
+} from '../services/socket';
 
 export const TeacherDashboard = () => {
   const { currentUser } = useAuth();
@@ -56,6 +71,67 @@ export const TeacherDashboard = () => {
     isUrgent: false
   });
   const [isSendingBroadcast, setIsSendingBroadcast] = useState(false);
+
+  // Real-Time Twilio & Socket Messaging State
+  const [inboundReplies, setInboundReplies] = useState([]);
+  const [liveAlertToast, setLiveAlertToast] = useState(null);
+  const [isSimulatingInbound, setIsSimulatingInbound] = useState(false);
+
+  // Initialize Real-time Socket Connection
+  useEffect(() => {
+    initSocket(localStorage.getItem('token'));
+    joinClassRoom(selectedClass);
+
+    const cleanupInbound = onInboundParentMessage((data) => {
+      setInboundReplies(prev => [data, ...prev]);
+      setLiveAlertToast({
+        id: Date.now(),
+        parentName: data.parentName,
+        studentName: data.studentName,
+        body: data.body,
+        isUrgent: data.isUrgent,
+        time: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
+      });
+      setTimeout(() => setLiveAlertToast(null), 8000);
+    });
+
+    const cleanupStatus = onWhatsAppStatusUpdate((update) => {
+      if (update?.messageSid) {
+        setSaveMessage({
+          type: 'success',
+          text: `✓ Twilio Delivery Update: Message ${update.messageSid.substring(0, 10)}... status is now "${update.deliveryStatus.toUpperCase()}".`
+        });
+        setTimeout(() => setSaveMessage(null), 4000);
+      }
+    });
+
+    return () => {
+      cleanupInbound();
+      cleanupStatus();
+    };
+  }, [selectedClass]);
+
+  const handleSimulateInboundParent = async () => {
+    setIsSimulatingInbound(true);
+    try {
+      const sampleStudent = students[0] || { numericId: 801, fullName: 'Asha Jadhav', parentName: 'Savita Jadhav' };
+      const sampleTexts = [
+        `Namaste Master ji, ${sampleStudent.fullName} had fever this morning so missed the bus. She is resting and will attend class tomorrow.`,
+        `Respected Teacher, this is ${sampleStudent.parentName}. We had harvest duties today in the hamlet. ${sampleStudent.fullName} has finished yesterday's math homework.`,
+        `Sir, please send the audio capsule for Marathi revision. Our village power is back on now.`
+      ];
+      const randomText = sampleTexts[Math.floor(Math.random() * sampleTexts.length)];
+
+      await twilioAPI.simulateInbound({
+        studentId: sampleStudent.numericId,
+        messageText: randomText
+      });
+    } catch (err) {
+      alert(`Simulation notice: ${err.message}`);
+    } finally {
+      setIsSimulatingInbound(false);
+    }
+  };
 
   useEffect(() => {
     loadDashboardData();
@@ -441,8 +517,151 @@ export const TeacherDashboard = () => {
           >
             <Icon name="phone" size={14} /> Broadcast Notice
           </button>
+
+          {/* Real-time Twilio Live Channel Pill & Testing Trigger */}
+          <div className="flex items-center gap-1">
+            <span
+              className="badge"
+              style={{
+                backgroundColor: '#ecfdf5',
+                color: '#059669',
+                border: '1px solid #10b981',
+                fontSize: '0.72rem',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '4px',
+                padding: '0.3rem 0.5rem'
+              }}
+              title="Socket.IO Real-Time Messaging Hub Connected"
+            >
+              <span>🟢</span> Live Twilio
+            </span>
+            <button
+              type="button"
+              className="btn btn-outline btn-sm"
+              style={{ borderColor: '#6366f1', color: '#4f46e5', fontSize: '0.74rem', padding: '0.25rem 0.5rem' }}
+              onClick={handleSimulateInboundParent}
+              disabled={isSimulatingInbound}
+              title="Simulate parent replying to school via Twilio WhatsApp / SMS"
+            >
+              {isSimulatingInbound ? 'Emulating...' : '🧪 Test Parent Reply'}
+            </button>
+          </div>
         </div>
       </div>
+
+      {/* Live Inbound Parent Reply Banner Toast */}
+      {liveAlertToast && (
+        <div
+          className="alert-banner"
+          style={{
+            backgroundColor: liveAlertToast.isUrgent ? '#fef2f2' : '#f0fdf4',
+            border: liveAlertToast.isUrgent ? '2px solid #ef4444' : '2px solid #10b981',
+            color: liveAlertToast.isUrgent ? '#991b1b' : '#065f46',
+            padding: '0.75rem 1rem',
+            marginBottom: '1rem',
+            borderRadius: '8px',
+            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            gap: '1rem',
+            flexWrap: 'wrap'
+          }}
+        >
+          <div className="flex items-center gap-2">
+            <span style={{ fontSize: '1.25rem' }}>{liveAlertToast.isUrgent ? '🚨' : '💬'}</span>
+            <div>
+              <div className="font-bold text-sm">
+                Real-Time Twilio Inbound Alert • {liveAlertToast.parentName} (Parent of {liveAlertToast.studentName})
+                <span className="text-xs font-normal text-muted ml-2">{liveAlertToast.time}</span>
+              </div>
+              <div className="text-sm mt-0.5" style={{ fontStyle: 'italic' }}>
+                "{liveAlertToast.body}"
+              </div>
+            </div>
+          </div>
+          <button
+            type="button"
+            className="btn btn-sm"
+            style={{ backgroundColor: '#25D366', color: '#fff', border: 'none', fontSize: '0.75rem' }}
+            onClick={() => {
+              const stu = students.find(s => s.fullName === liveAlertToast.studentName) || students[0];
+              if (stu) handleOpenWhatsAppModal(stu, 'teacher_notice');
+            }}
+          >
+            Reply on WhatsApp
+          </button>
+        </div>
+      )}
+
+      {/* Real-Time Inbound Parent Replies Tray */}
+      {inboundReplies.length > 0 && (
+        <div className="portal-section-card mb-4" style={{ borderLeft: '4px solid #6366f1' }}>
+          <div className="section-card-header">
+            <div className="flex items-center gap-2">
+              <Icon name="phone" size={18} color="#4f46e5" />
+              <h3>Real-Time Parent Mobile Replies ({inboundReplies.length})</h3>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="badge badge-primary">⚡ Twilio Inbound Feed</span>
+              <button
+                type="button"
+                className="btn btn-outline btn-sm"
+                style={{ fontSize: '0.72rem', padding: '0.2rem 0.5rem' }}
+                onClick={() => setInboundReplies([])}
+              >
+                Clear Feed
+              </button>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            {inboundReplies.slice(0, 5).map((reply, idx) => (
+              <div
+                key={reply.messageSid || idx}
+                style={{
+                  backgroundColor: '#f8fafc',
+                  border: '1px solid #e2e8f0',
+                  borderRadius: '6px',
+                  padding: '0.65rem 0.9rem',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  gap: '1rem',
+                  flexWrap: 'wrap'
+                }}
+              >
+                <div style={{ flex: '1 1 300px' }}>
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-sm text-primary">{reply.parentName}</span>
+                    <span className="text-xs text-muted">Parent of {reply.studentName} (Class {reply.classLevel})</span>
+                    {reply.isUrgent && (
+                      <span className="badge badge-danger" style={{ fontSize: '0.65rem' }}>🚨 Urgent</span>
+                    )}
+                  </div>
+                  <p className="text-sm mt-1" style={{ margin: '0.25rem 0 0', color: '#1e293b' }}>
+                    "{reply.body}"
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    className="btn btn-sm"
+                    style={{ backgroundColor: '#25D366', color: '#fff', border: 'none', fontSize: '0.75rem', padding: '0.25rem 0.6rem' }}
+                    onClick={() => {
+                      const stu = students.find(s => s.numericId === reply.studentId) || { numericId: reply.studentId, fullName: reply.studentName, parentName: reply.parentName, classLevel: reply.classLevel };
+                      handleOpenWhatsAppModal(stu, 'teacher_notice');
+                    }}
+                  >
+                    💬 Reply
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Summary KPI Badges */}
       <div className="quick-kpi-grid">
@@ -1121,7 +1340,36 @@ export const TeacherDashboard = () => {
               >
                 Cancel
               </button>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
+                <button
+                  type="button"
+                  className="btn btn-outline"
+                  style={{ borderColor: '#3b82f6', color: '#1d4ed8' }}
+                  onClick={async () => {
+                    if (!targetStudentForWA) return;
+                    setWaSending(true);
+                    try {
+                      const res = await twilioAPI.sendSMS({
+                        studentId: targetStudentForWA.numericId,
+                        messageBody: getWaPreviewText()
+                      });
+                      setShowWhatsAppModal(false);
+                      setSaveMessage({
+                        type: 'success',
+                        text: `✓ Twilio SMS dispatched successfully to ${targetStudentForWA.parentName} (${res.result?.messageSid || 'Delivered'})!`
+                      });
+                      setTimeout(() => setSaveMessage(null), 5000);
+                    } catch (err) {
+                      alert(`Twilio SMS Error: ${err.message}`);
+                    } finally {
+                      setWaSending(false);
+                    }
+                  }}
+                  disabled={waSending}
+                  title="Dispatch as direct carrier SMS via Twilio (for parents without active WhatsApp data)"
+                >
+                  📱 Send Twilio SMS
+                </button>
                 <button
                   type="button"
                   className="btn btn-outline"

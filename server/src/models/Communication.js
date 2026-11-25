@@ -11,12 +11,18 @@ const communicationSchema = new mongoose.Schema(
     senderTeacherId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
-      required: true
+      required: false,
+      default: null
     },
     senderTeacherName: {
       type: String,
       required: true,
       trim: true
+    },
+    senderRole: {
+      type: String,
+      enum: ['teacher', 'parent', 'admin'],
+      default: 'teacher'
     },
     classLevel: {
       type: Number,

@@ -9,7 +9,16 @@ import {
 import { authenticateToken } from '../middleware/auth.js';
 import { requireStaff } from '../middleware/rbac.js';
 
+import {
+  handleTwilioWebhook,
+  handleTwilioStatusCallback
+} from '../controllers/twilioController.js';
+
 const router = Router();
+
+// Public Twilio Webhooks
+router.post('/webhook', handleTwilioWebhook);
+router.post('/status-callback', handleTwilioStatusCallback);
 
 router.use(authenticateToken);
 

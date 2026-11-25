@@ -14,6 +14,13 @@ import { AttendanceGauge } from '../components/AttendanceGauge';
 import { PrintMarksheetModal } from '../components/PrintMarksheetModal';
 import { AudioPlayerModal } from '../components/AudioPlayerModal';
 import { RemedialQuizSection } from '../components/RemedialQuizSection';
+import {
+  initSocket,
+  joinStudentRoom,
+  onInboundParentMessage,
+  onReceiveChatMessage,
+  sendLiveChatMessage
+} from '../services/socket';
 
 export const ParentStudentPortal = ({ subTab = 'all' }) => {
   const { currentUser, role } = useAuth();
@@ -28,6 +35,11 @@ export const ParentStudentPortal = ({ subTab = 'all' }) => {
   const [resources, setResources] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // Two-way reply and live chat state
+  const [parentReplyText, setParentReplyText] = useState('');
+  const [isSendingReply, setIsSendingReply] = useState(false);
+  const [replySuccessMsg, setReplySuccessMsg] = useState(null);
 
   // Modals state
   const [showPrintModal, setShowPrintModal] = useState(false);
@@ -96,6 +108,93 @@ export const ParentStudentPortal = ({ subTab = 'all' }) => {
 
     fetchPortalData();
   }, [linkedStudentId]);
+
+  // Real-Time Socket Connection & Event Listeners
+  useEffect(() => {
+    if (linkedStudentId) {
+      initSocket(localStorage.getItem('token'));
+      joinStudentRoom(linkedStudentId);
+
+      const cleanupInbound = onInboundParentMessage((data) => {
+        if (data.studentId === Number(linkedStudentId)) {
+          setCommunications(prev => [{
+            _id: data.communicationId || Date.now(),
+            title: `💬 Inbound Mobile Message from ${data.parentName}`,
+            messageText: data.body,
+            category: 'parent_reply',
+            senderTeacherName: `${data.parentName} (Parent)`,
+            createdAt: data.timestamp || new Date(),
+            readStatus: true
+          }, ...prev]);
+        }
+      });
+
+      const cleanupChat = onReceiveChatMessage((chat) => {
+        if (chat.studentId === Number(linkedStudentId)) {
+          setCommunications(prev => [{
+            _id: Date.now(),
+            title: `Direct Message from ${chat.senderName}`,
+            messageText: chat.message,
+            category: chat.senderRole === 'parent' ? 'parent_reply' : 'general_notice',
+            senderTeacherName: `${chat.senderName} (${chat.senderRole})`,
+            createdAt: chat.timestamp || new Date(),
+            readStatus: true
+          }, ...prev]);
+        }
+      });
+
+      return () => {
+        cleanupInbound();
+        cleanupChat();
+      };
+    }
+  }, [linkedStudentId]);
+
+  const handleSendParentReply = async (e) => {
+    e.preventDefault();
+    if (!parentReplyText.trim()) return;
+
+    setIsSendingReply(true);
+    setReplySuccessMsg(null);
+    try {
+      const replyBody = parentReplyText.trim();
+
+      // 1. Send via communications API
+      const res = await communicationsAPI.sendMessage({
+        studentId: linkedStudentId,
+        title: `Parent Update from ${student?.parentName || 'Parent'}`,
+        messageText: replyBody,
+        category: 'parent_reply',
+        isUrgent: false
+      });
+
+      // 2. Broadcast via socket for instant live reflection
+      sendLiveChatMessage({
+        studentId: linkedStudentId,
+        message: replyBody,
+        senderName: student?.parentName || 'Parent',
+        senderRole: 'parent'
+      });
+
+      setCommunications(prev => [res.data || {
+        _id: Date.now(),
+        title: `Parent Update from ${student?.parentName || 'Parent'}`,
+        messageText: replyBody,
+        category: 'parent_reply',
+        senderTeacherName: `${student?.parentName || 'Parent'} (You)`,
+        createdAt: new Date(),
+        readStatus: true
+      }, ...prev]);
+
+      setParentReplyText('');
+      setReplySuccessMsg('✓ Your reply was delivered to the Class Teacher in real time!');
+      setTimeout(() => setReplySuccessMsg(null), 5000);
+    } catch (err) {
+      alert(`Failed to send message: ${err.message}`);
+    } finally {
+      setIsSendingReply(false);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -463,6 +562,62 @@ export const ParentStudentPortal = ({ subTab = 'all' }) => {
               })}
             </div>
           )}
+
+          {/* Direct Real-Time Reply to Teacher */}
+          <div className="mt-4 pt-3 border-t">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <span style={{ fontSize: '1.1rem' }}>✉️</span>
+                <h4 className="font-bold text-sm" style={{ margin: 0, color: '#4f46e5' }}>
+                  Send Real-Time Message to Class Teacher
+                </h4>
+              </div>
+              <span
+                className="badge"
+                style={{
+                  backgroundColor: '#ecfdf5',
+                  color: '#059669',
+                  border: '1px solid #10b981',
+                  fontSize: '0.7rem'
+                }}
+              >
+                🟢 Live Channel Active
+              </span>
+            </div>
+
+            {replySuccessMsg && (
+              <div className="alert-banner alert-success mb-2" style={{ padding: '0.4rem 0.75rem', fontSize: '0.8rem' }}>
+                <Icon name="check-circle" size={14} />
+                <span>{replySuccessMsg}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleSendParentReply} className="flex flex-col gap-2">
+              <textarea
+                className="form-control"
+                rows="2"
+                placeholder="Type your message or reason regarding your child (e.g. fever, travel delay)..."
+                value={parentReplyText}
+                onChange={(e) => setParentReplyText(e.target.value)}
+                required
+                style={{ fontSize: '0.85rem' }}
+              ></textarea>
+              <div className="flex justify-between items-center flex-wrap gap-2">
+                <span className="text-xs text-muted">
+                  Dispatched instantly to Class Teacher's live console &amp; archived in official ledger.
+                </span>
+                <button
+                  type="submit"
+                  className="btn btn-primary btn-sm"
+                  disabled={isSendingReply || !parentReplyText.trim()}
+                  style={{ fontSize: '0.78rem', padding: '0.35rem 0.8rem' }}
+                >
+                  <Icon name="phone" size={12} />
+                  {isSendingReply ? 'Sending...' : '🚀 Send Real-Time Message'}
+                </button>
+              </div>
+            </form>
+          </div>
 
           {/* Official WhatsApp Dispatch Trail */}
           <div className="mt-4 pt-3 border-t">

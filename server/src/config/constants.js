@@ -45,7 +45,8 @@ export const COMMUNICATION_CATEGORIES = [
   'academic_feedback',
   'homework',
   'general_notice',
-  'urgent_call'
+  'urgent_call',
+  'parent_reply'
 ];
 
 export const RISK_THRESHOLDS = {

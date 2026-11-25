@@ -20,6 +20,7 @@ import communicationRoutes from './routes/communicationRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
 import teacherRoutes from './routes/teacherRoutes.js';
 import whatsappRoutes from './routes/whatsappRoutes.js';
+import twilioRoutes from './routes/twilioRoutes.js';
 
 dotenv.config();
 
@@ -67,6 +68,7 @@ app.use('/api/communications', communicationRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/teacher', teacherRoutes);
 app.use('/api/whatsapp', whatsappRoutes);
+app.use('/api/twilio', twilioRoutes);
 
 // Catch-all 404 for undefined API routes
 app.all('/api/*', (req, res) => {

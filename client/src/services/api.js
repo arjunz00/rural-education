@@ -238,6 +238,18 @@ export const whatsappAPI = {
   }
 };
 
+export const twilioAPI = {
+  getConfig: () => apiRequest('/twilio/config'),
+  simulateInbound: (payload) => apiRequest('/twilio/simulate-inbound', {
+    method: 'POST',
+    body: JSON.stringify(payload)
+  }),
+  sendSMS: (payload) => apiRequest('/twilio/send-sms', {
+    method: 'POST',
+    body: JSON.stringify(payload)
+  })
+};
+
 export const healthAPI = {
   check: () => apiRequest('/health')
 };
