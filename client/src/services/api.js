@@ -218,6 +218,26 @@ export const communicationsAPI = {
   getUnreadCount: (studentId) => apiRequest(`/communications/unread-count/${studentId}`)
 };
 
+export const whatsappAPI = {
+  send: (payload) => apiRequest('/whatsapp/send', {
+    method: 'POST',
+    body: JSON.stringify(payload)
+  }),
+  sendBulkAbsenceAlerts: (payload = {}) => apiRequest('/whatsapp/bulk-absence-alerts', {
+    method: 'POST',
+    body: JSON.stringify(payload)
+  }),
+  getLogs: (params = {}) => {
+    const q = new URLSearchParams(params).toString();
+    return apiRequest(`/whatsapp/logs${q ? `?${q}` : ''}`);
+  },
+  getSummary: () => apiRequest('/whatsapp/logs/summary'),
+  getLink: (params = {}) => {
+    const q = new URLSearchParams(params).toString();
+    return apiRequest(`/whatsapp/link${q ? `?${q}` : ''}`);
+  }
+};
+
 export const healthAPI = {
   check: () => apiRequest('/health')
 };

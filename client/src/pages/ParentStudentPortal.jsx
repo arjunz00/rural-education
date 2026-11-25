@@ -6,7 +6,8 @@ import {
   academicAPI,
   interventionsAPI,
   resourcesAPI,
-  communicationsAPI
+  communicationsAPI,
+  whatsappAPI
 } from '../services/api';
 import { Icon } from '../components/Icons';
 import { AttendanceGauge } from '../components/AttendanceGauge';
@@ -23,6 +24,7 @@ export const ParentStudentPortal = ({ subTab = 'all' }) => {
   const [academicData, setAcademicData] = useState(null);
   const [interventions, setInterventions] = useState([]);
   const [communications, setCommunications] = useState([]);
+  const [whatsAppLogs, setWhatsAppLogs] = useState([]);
   const [resources, setResources] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -67,13 +69,14 @@ export const ParentStudentPortal = ({ subTab = 'all' }) => {
 
       try {
         // Fetch all scoped endpoints in parallel
-        const [studentRes, attRes, acadRes, intRes, resRes, commRes] = await Promise.all([
+        const [studentRes, attRes, acadRes, intRes, resRes, commRes, waRes] = await Promise.all([
           studentsAPI.getStudentById(linkedStudentId),
           studentsAPI.getStudentAttendance(linkedStudentId),
           studentsAPI.getStudentAcademic(linkedStudentId),
           studentsAPI.getStudentInterventions(linkedStudentId),
           resourcesAPI.getAll(),
-          communicationsAPI.getStudentCommunications(linkedStudentId).catch(() => ({ data: [] }))
+          communicationsAPI.getStudentCommunications(linkedStudentId).catch(() => ({ data: [] })),
+          whatsappAPI.getLogs({ studentId: linkedStudentId }).catch(() => ({ logs: [] }))
         ]);
 
         if (studentRes.success) setStudent(studentRes.data);
@@ -82,6 +85,7 @@ export const ParentStudentPortal = ({ subTab = 'all' }) => {
         if (intRes.success) setInterventions(intRes.data || []);
         if (resRes.success) setResources(resRes.data || []);
         if (commRes.data) setCommunications(commRes.data || []);
+        if (waRes.logs) setWhatsAppLogs(waRes.logs || []);
       } catch (err) {
         console.error('Failed to load child portal data:', err);
         setError(err.message || 'Error fetching child records.');
@@ -153,6 +157,23 @@ export const ParentStudentPortal = ({ subTab = 'all' }) => {
           <p className="parent-affiliation text-sm text-muted">
             <Icon name="parent" size={14} /> Guardian / Parent: <strong>{student?.parentName || 'Savita Jadhav'}</strong> • Contact: {student?.parentContact || '+91 98221 44521'}
           </p>
+          <div
+            className="flex items-center gap-2 mt-2"
+            style={{
+              backgroundColor: '#f0fdf4',
+              border: '1px solid #bbf7d0',
+              padding: '0.35rem 0.65rem',
+              borderRadius: '6px',
+              fontSize: '0.78rem',
+              color: '#166534',
+              display: 'inline-flex'
+            }}
+          >
+            <span style={{ fontSize: '0.9rem' }}>💬</span>
+            <span>
+              <strong>Automated WhatsApp Alerts Active:</strong> Absence notices &amp; CCE marks summaries are sent to {student?.parentContact || 'Registered Mobile'}.
+            </span>
+          </div>
         </div>
 
         <div className="identity-actions">
@@ -442,6 +463,61 @@ export const ParentStudentPortal = ({ subTab = 'all' }) => {
               })}
             </div>
           )}
+
+          {/* Official WhatsApp Dispatch Trail */}
+          <div className="mt-4 pt-3 border-t">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <span style={{ fontSize: '1.1rem' }}>💬</span>
+                <h4 className="font-bold text-sm" style={{ margin: 0, color: '#075E54' }}>
+                  Official WhatsApp Alert History ({whatsAppLogs.length})
+                </h4>
+              </div>
+              <span className="text-xs text-muted">Direct Mobile Dispatch Trail</span>
+            </div>
+
+            {whatsAppLogs.length === 0 ? (
+              <div className="text-xs text-muted py-2" style={{ fontStyle: 'italic' }}>
+                No recent automated WhatsApp absence or marksheet alerts have been triggered. Your child is maintaining steady attendance.
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {whatsAppLogs.map((log) => (
+                  <div
+                    key={log._id}
+                    style={{
+                      backgroundColor: '#f0fdf4',
+                      borderLeft: '3px solid #25D366',
+                      borderRadius: '4px',
+                      padding: '0.6rem 0.8rem',
+                      fontSize: '0.82rem',
+                      marginBottom: '0.5rem'
+                    }}
+                  >
+                    <div className="flex justify-between items-center">
+                      <span className="font-semibold text-primary">
+                        {log.templateType === 'daily_absence' && '📅 Morning Absence Alert'}
+                        {log.templateType === 'consecutive_absence_alert' && '🚨 Critical Consecutive Absence Warning'}
+                        {log.templateType === 'marksheet_summary' && '📊 CCE Marksheet Summary'}
+                        {log.templateType === 'teacher_notice' && '📢 Teacher Notice'}
+                      </span>
+                      <div className="flex items-center gap-2 text-xs">
+                        <span className="badge badge-success" style={{ fontSize: '0.7rem' }}>
+                          ✓✓ {log.deliveryStatus.toUpperCase()}
+                        </span>
+                        <span className="text-muted">
+                          {new Date(log.sentAt).toLocaleDateString('en-IN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                      </div>
+                    </div>
+                    <p className="text-xs mt-1 text-gray-700" style={{ whiteSpace: 'pre-line', margin: '0.25rem 0 0' }}>
+                      {log.messageBody.length > 150 ? `${log.messageBody.substring(0, 150)}...` : log.messageBody}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       )}
 

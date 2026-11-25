@@ -1,11 +1,35 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Icon } from './Icons';
+import { whatsappAPI } from '../services/api';
 
 export const PrintMarksheetModal = ({ student, academicSummary, onClose }) => {
   if (!student) return null;
 
+  const [isSharingWA, setIsSharingWA] = useState(false);
+  const [shareMsg, setShareMsg] = useState(null);
+
   const handlePrint = () => {
     window.print();
+  };
+
+  const handleShareWhatsApp = async () => {
+    setIsSharingWA(true);
+    setShareMsg(null);
+    try {
+      const res = await whatsappAPI.send({
+        studentId: student.numericId,
+        templateType: 'marksheet_summary'
+      });
+      if (res?.clickToChatUrl) {
+        window.open(res.clickToChatUrl, '_blank');
+      }
+      setShareMsg(`✓ Marksheet sent to ${student.parentName}!`);
+      setTimeout(() => setShareMsg(null), 4000);
+    } catch (err) {
+      alert(`WhatsApp Share Error: ${err.message}`);
+    } finally {
+      setIsSharingWA(false);
+    }
   };
 
   const records = academicSummary?.allRecords || [];
@@ -22,6 +46,16 @@ export const PrintMarksheetModal = ({ student, academicSummary, onClose }) => {
             <span className="text-xs text-muted">Govt. of Maharashtra / Zilla Parishad</span>
           </div>
           <div className="flex items-center gap-2">
+            <button
+              type="button"
+              className="btn btn-sm"
+              style={{ backgroundColor: '#25D366', color: '#fff', border: 'none', fontWeight: 'bold' }}
+              onClick={handleShareWhatsApp}
+              disabled={isSharingWA}
+              title="Send Marksheet summary directly to parent's WhatsApp"
+            >
+              💬 {isSharingWA ? 'Sharing...' : 'Share on WhatsApp'}
+            </button>
             <button className="btn btn-primary btn-sm" onClick={handlePrint}>
               <Icon name="printer" size={14} /> Print / Save PDF
             </button>
@@ -30,6 +64,13 @@ export const PrintMarksheetModal = ({ student, academicSummary, onClose }) => {
             </button>
           </div>
         </div>
+
+        {shareMsg && (
+          <div className="alert-banner alert-success no-print" style={{ margin: '0.5rem 1.5rem 0' }}>
+            <Icon name="check-circle" size={16} />
+            <span>{shareMsg}</span>
+          </div>
+        )}
 
         {/* Printable Marksheet Container */}
         <div className="printable-sheet">
@@ -151,13 +192,24 @@ export const PrintMarksheetModal = ({ student, academicSummary, onClose }) => {
           </div>
         </div>
 
-        <div className="modal-footer no-print">
-          <button className="btn btn-secondary" onClick={onClose}>
-            Close
+        <div className="modal-footer no-print" style={{ justifyContent: 'space-between' }}>
+          <button
+            type="button"
+            className="btn btn-outline"
+            style={{ borderColor: '#25D366', color: '#075E54', fontWeight: 'bold' }}
+            onClick={handleShareWhatsApp}
+            disabled={isSharingWA}
+          >
+            💬 {isSharingWA ? 'Dispatching...' : `WhatsApp to ${student.parentName}`}
           </button>
-          <button className="btn btn-primary" onClick={handlePrint}>
-            <Icon name="printer" size={16} /> Print Marksheet
-          </button>
+          <div className="flex items-center gap-2">
+            <button className="btn btn-secondary" onClick={onClose}>
+              Close
+            </button>
+            <button className="btn btn-primary" onClick={handlePrint}>
+              <Icon name="printer" size={16} /> Print Marksheet
+            </button>
+          </div>
         </div>
       </div>
     </div>

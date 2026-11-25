@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { attendanceAPI, riskAPI, interventionsAPI, adminAPI } from '../services/api';
+import { attendanceAPI, riskAPI, interventionsAPI, adminAPI, whatsappAPI } from '../services/api';
 import { Icon } from '../components/Icons';
 import { AttendanceGauge } from '../components/AttendanceGauge';
 
@@ -57,6 +57,25 @@ export const HeadmasterDashboard = () => {
       setTimeout(() => setActionMessage(null), 5000);
     } catch (err) {
       setActionMessage({ type: 'error', text: err.message || 'Failed to reject teacher.' });
+    }
+  };
+
+  const handleSendDropoutWhatsAppAlert = async (stu) => {
+    try {
+      const res = await whatsappAPI.send({
+        studentId: stu.studentId,
+        templateType: 'consecutive_absence_alert'
+      });
+      if (res?.clickToChatUrl) {
+        window.open(res.clickToChatUrl, '_blank');
+      }
+      setActionMessage({
+        type: 'success',
+        text: `✓ Urgent WhatsApp Warning dispatched to ${stu.parentName} (Parent of ${stu.studentName})!`
+      });
+      setTimeout(() => setActionMessage(null), 5000);
+    } catch (err) {
+      setActionMessage({ type: 'error', text: `WhatsApp Warning failed: ${err.message}` });
     }
   };
 
@@ -271,12 +290,13 @@ export const HeadmasterDashboard = () => {
                 <th>Trend</th>
                 <th>Early Warning Factor</th>
                 <th>Institutional Action Plan</th>
+                <th>Direct Alert</th>
               </tr>
             </thead>
             <tbody>
               {highRiskStudents.length === 0 ? (
                 <tr>
-                  <td colSpan="7" className="text-center py-4 text-muted">
+                  <td colSpan="8" className="text-center py-4 text-muted">
                     No students currently flagged in high dropout zone.
                   </td>
                 </tr>
@@ -311,6 +331,24 @@ export const HeadmasterDashboard = () => {
                     </td>
                     <td>
                       <span className="action-pill text-xs">{stu.recommendedAction}</span>
+                    </td>
+                    <td>
+                      <button
+                        type="button"
+                        className="btn btn-sm"
+                        style={{
+                          backgroundColor: '#25D366',
+                          color: '#ffffff',
+                          fontWeight: 'bold',
+                          fontSize: '0.75rem',
+                          padding: '0.3rem 0.55rem',
+                          whiteSpace: 'nowrap'
+                        }}
+                        onClick={() => handleSendDropoutWhatsAppAlert(stu)}
+                        title="Dispatch urgent 3+ day absence warning directly to parent's WhatsApp"
+                      >
+                        💬 WhatsApp Alert
+                      </button>
                     </td>
                   </tr>
                 ))

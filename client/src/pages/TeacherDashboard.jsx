@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { studentsAPI, attendanceAPI, riskAPI, interventionsAPI, communicationsAPI, teacherAPI } from '../services/api';
+import { studentsAPI, attendanceAPI, riskAPI, interventionsAPI, communicationsAPI, teacherAPI, whatsappAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { Icon } from '../components/Icons';
 
@@ -17,6 +17,14 @@ export const TeacherDashboard = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  // WhatsApp Alert Modal State
+  const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);
+  const [targetStudentForWA, setTargetStudentForWA] = useState(null);
+  const [waTemplateType, setWaTemplateType] = useState('daily_absence');
+  const [waCustomNotes, setWaCustomNotes] = useState('');
+  const [waSending, setWaSending] = useState(false);
+  const [isSendingBulkWA, setIsSendingBulkWA] = useState(false);
 
   // Intervention modal
   const [showInterventionModal, setShowInterventionModal] = useState(false);
@@ -234,6 +242,101 @@ export const TeacherDashboard = () => {
       alert(`Failed to broadcast notice: ${err.message}`);
     } finally {
       setIsSendingBroadcast(false);
+    }
+  };
+
+  // WhatsApp Alert Handlers
+  const handleOpenWhatsAppModal = (student, template = 'daily_absence') => {
+    setTargetStudentForWA(student);
+    setWaTemplateType(template);
+    setWaCustomNotes('');
+    setShowWhatsAppModal(true);
+  };
+
+  const getWaPreviewText = () => {
+    if (!targetStudentForWA) return '';
+    const parent = targetStudentForWA.parentName || 'Guardian';
+    const student = targetStudentForWA.fullName || 'Student';
+    const dateStr = attendanceDate;
+    const teacherName = currentUser?.name || 'Class Teacher';
+    const schoolName = 'Zilla Parishad High School, Circle 4';
+
+    switch (waTemplateType) {
+      case 'daily_absence':
+        return `🙏 Namaste ${parent} ji,\n\nYour child *${student}* was marked *ABSENT* today (${dateStr}) at ${schoolName}.\n\nIf your child is unwell or facing travel difficulties, please inform Class Teacher *${teacherName}*.\n\n_GramShiksha Digital Attendance Desk_`;
+      case 'consecutive_absence_alert':
+        const risk = riskMap[targetStudentForWA.numericId];
+        const consecDays = risk?.consecutiveAbsent || 3;
+        return `⚠️ *URGENT ATTENDANCE WARNING*\n\nNamaste ${parent} ji,\n\nYour child *${student}* has missed *${consecDays} consecutive school days* at ${schoolName}.\n\nContinued absences risk academic disruption and enrollment cancellation. Please visit the school tomorrow morning to meet Principal Dr. K. Patil and Class Teacher *${teacherName}*.\n\n_GramShiksha Early Warning Desk_`;
+      case 'marksheet_summary':
+        return `📊 *CCE ACADEMIC EVALUATION REPORT*\n\nNamaste ${parent} ji,\n\nTerm evaluation for *${student}* (Class ${targetStudentForWA.classLevel}) has been published at ${schoolName}.\n\nPlease review progress and encourage daily revision at home.\n\n_GramShiksha Academic Monitoring_`;
+      case 'teacher_notice':
+      default:
+        return `📢 *OFFICIAL SCHOOL NOTICE*\n\nNamaste ${parent} ji,\n\nUpdate regarding *${student}* (Class ${targetStudentForWA.classLevel}) from Class Teacher *${teacherName}*:\n\n${waCustomNotes || 'Please ensure daily revision packets are completed at home.'}\n\n_GramShiksha ZP School_`;
+    }
+  };
+
+  const handleSendWhatsAppAPI = async () => {
+    if (!targetStudentForWA) return;
+    setWaSending(true);
+    try {
+      const res = await whatsappAPI.send({
+        studentId: targetStudentForWA.numericId,
+        templateType: waTemplateType,
+        customNotes: waCustomNotes
+      });
+      setShowWhatsAppModal(false);
+      setSaveMessage({
+        type: 'success',
+        text: `✓ WhatsApp alert delivered successfully to ${targetStudentForWA.parentName} (${targetStudentForWA.parentContact || 'Mobile'})!`
+      });
+      setTimeout(() => setSaveMessage(null), 5000);
+    } catch (err) {
+      alert(`WhatsApp Delivery Error: ${err.message}`);
+    } finally {
+      setWaSending(false);
+    }
+  };
+
+  const handleOpenWhatsAppWeb = async () => {
+    if (!targetStudentForWA) return;
+    try {
+      const res = await whatsappAPI.getLink({
+        studentId: targetStudentForWA.numericId,
+        templateType: waTemplateType,
+        customNotes: waCustomNotes
+      });
+      if (res?.clickToChatUrl) {
+        window.open(res.clickToChatUrl, '_blank');
+      } else {
+        alert('Could not generate WhatsApp Web link');
+      }
+      setShowWhatsAppModal(false);
+    } catch (err) {
+      alert(`WhatsApp Link Error: ${err.message}`);
+    }
+  };
+
+  const handleBulkWhatsAppAbsenceAlerts = async () => {
+    if (!attendanceDate) return;
+    if (!window.confirm(`Send automated WhatsApp absence alerts to all parents of absent students for ${attendanceDate}?`)) {
+      return;
+    }
+    setIsSendingBulkWA(true);
+    try {
+      const res = await whatsappAPI.sendBulkAbsenceAlerts({
+        date: attendanceDate,
+        classLevel: selectedClass
+      });
+      setSaveMessage({
+        type: 'success',
+        text: `✓ Batch complete! Sent ${res.summary.sentCount} WhatsApp alerts to absent student parents for ${attendanceDate} (${res.summary.skippedCount} skipped).`
+      });
+      setTimeout(() => setSaveMessage(null), 5000);
+    } catch (err) {
+      alert(`Bulk WhatsApp Error: ${err.message}`);
+    } finally {
+      setIsSendingBulkWA(false);
     }
   };
 
@@ -477,14 +580,27 @@ export const TeacherDashboard = () => {
             <Icon name="calendar" size={18} color="#059669" />
             <h3>Class {selectedClass} Roll Call Matrix ({attendanceDate})</h3>
           </div>
-          <button
-            className="btn btn-primary"
-            onClick={handleSaveBulkRollCall}
-            disabled={isSaving}
-          >
-            <Icon name="check-circle" size={16} />
-            {isSaving ? 'Syncing...' : 'Save Roll Call (Bulk Sync)'}
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              className="btn btn-outline"
+              style={{ borderColor: '#25D366', color: '#128C7E', fontWeight: 'bold' }}
+              onClick={handleBulkWhatsAppAbsenceAlerts}
+              disabled={isSendingBulkWA || absentCount === 0}
+              title={absentCount === 0 ? "No absent students today" : `Send instant WhatsApp absence alerts to all ${absentCount} absent parents`}
+            >
+              <Icon name="phone" size={16} color="#25D366" />
+              {isSendingBulkWA ? 'Alerting via WhatsApp...' : `💬 WhatsApp ${absentCount} Absent Parent${absentCount !== 1 ? 's' : ''}`}
+            </button>
+            <button
+              className="btn btn-primary"
+              onClick={handleSaveBulkRollCall}
+              disabled={isSaving}
+            >
+              <Icon name="check-circle" size={16} />
+              {isSaving ? 'Syncing...' : 'Save Roll Call (Bulk Sync)'}
+            </button>
+          </div>
         </div>
 
         {isLoading ? (
@@ -586,6 +702,22 @@ export const TeacherDashboard = () => {
                       {/* Proactive ERP Action Buttons */}
                       <td>
                         <div className="flex items-center gap-1">
+                          <button
+                            type="button"
+                            className="btn btn-sm"
+                            onClick={() => handleOpenWhatsAppModal(stu, entry.status === 'absent' ? 'daily_absence' : (hasCriticalAlert ? 'consecutive_absence_alert' : 'teacher_notice'))}
+                            title="Send WhatsApp notice to parent"
+                            style={{
+                              padding: '0.3rem 0.55rem',
+                              fontSize: '0.78rem',
+                              backgroundColor: entry.status === 'absent' || hasCriticalAlert ? '#25D366' : '#f0fdf4',
+                              color: entry.status === 'absent' || hasCriticalAlert ? '#ffffff' : '#15803d',
+                              borderColor: '#25D366',
+                              fontWeight: entry.status === 'absent' || hasCriticalAlert ? 'bold' : 'normal'
+                            }}
+                          >
+                            💬 WA
+                          </button>
                           <button
                             type="button"
                             className="btn btn-primary btn-sm"
@@ -874,6 +1006,143 @@ export const TeacherDashboard = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* WhatsApp Parent Notification Modal */}
+      {showWhatsAppModal && targetStudentForWA && (
+        <div className="modal-backdrop" onClick={() => setShowWhatsAppModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '600px' }}>
+            <div className="modal-header" style={{ borderBottom: '2px solid #25D366' }}>
+              <div className="flex items-center gap-2">
+                <span style={{ fontSize: '1.3rem' }}>💬</span>
+                <h3 className="font-bold" style={{ color: '#075E54' }}>
+                  WhatsApp Parent Alert: {targetStudentForWA.fullName}
+                </h3>
+              </div>
+              <button className="btn-icon" onClick={() => setShowWhatsAppModal(false)}>
+                <Icon name="x-circle" size={18} />
+              </button>
+            </div>
+
+            <div className="modal-body">
+              {/* Recipient Details Card */}
+              <div
+                style={{
+                  backgroundColor: '#f0fdf4',
+                  border: '1px solid #bbf7d0',
+                  borderRadius: '6px',
+                  padding: '0.75rem 1rem',
+                  marginBottom: '1rem'
+                }}
+              >
+                <div className="flex justify-between items-center text-sm">
+                  <div>
+                    <span className="font-semibold text-gray-700">Parent / Guardian: </span>
+                    <span className="font-bold text-primary">{targetStudentForWA.parentName}</span>
+                  </div>
+                  <div>
+                    <span className="font-semibold text-gray-700">Phone: </span>
+                    <span className="font-mono font-bold" style={{ color: '#075E54' }}>
+                      {targetStudentForWA.parentContact || 'No phone registered'}
+                    </span>
+                  </div>
+                </div>
+                <div className="text-xs text-muted mt-1">
+                  Student: Roll #{targetStudentForWA.numericId} • Class {targetStudentForWA.classLevel} • {targetStudentForWA.hamletOrWadi || 'Catchment Area'}
+                </div>
+              </div>
+
+              {/* Template Selector */}
+              <div className="form-group mb-3">
+                <label className="font-semibold text-sm">Select Notification Scenario</label>
+                <select
+                  className="form-control"
+                  value={waTemplateType}
+                  onChange={(e) => setWaTemplateType(e.target.value)}
+                >
+                  <option value="daily_absence">📅 Daily Morning Absence Notice</option>
+                  <option value="consecutive_absence_alert">🚨 3+ Days Consecutive Absence Warning</option>
+                  <option value="marksheet_summary">📊 CCE Exam Marksheet & Academic Summary</option>
+                  <option value="teacher_notice">📢 Direct Teacher Notice / Homework Broadcast</option>
+                </select>
+              </div>
+
+              {/* Custom Notes if Teacher Notice */}
+              {waTemplateType === 'teacher_notice' && (
+                <div className="form-group mb-3">
+                  <label className="font-semibold text-sm">Custom Teacher Notice / Homework</label>
+                  <textarea
+                    className="form-control"
+                    rows="3"
+                    placeholder="Enter instructions, homework assignment, or reason for communication..."
+                    value={waCustomNotes}
+                    onChange={(e) => setWaCustomNotes(e.target.value)}
+                  ></textarea>
+                </div>
+              )}
+
+              {/* WhatsApp Message Preview Bubble */}
+              <div className="form-group mb-3">
+                <label className="font-semibold text-sm flex items-center justify-between">
+                  <span>Message Preview (Dispatched via WhatsApp)</span>
+                  <span className="text-xs text-muted font-normal">Official Institutional Template</span>
+                </label>
+                <div
+                  style={{
+                    backgroundColor: '#e7f7ed',
+                    borderLeft: '4px solid #25D366',
+                    padding: '0.85rem 1rem',
+                    borderRadius: '4px 10px 10px 4px',
+                    fontFamily: 'system-ui, -apple-system, sans-serif',
+                    fontSize: '0.88rem',
+                    lineHeight: '1.45',
+                    whiteSpace: 'pre-line',
+                    color: '#111827',
+                    boxShadow: '0 1px 3px rgba(0,0,0,0.06)'
+                  }}
+                >
+                  {getWaPreviewText()}
+                </div>
+              </div>
+
+              <div className="text-xs text-muted">
+                🔒 All WhatsApp alerts are archived in the school compliance audit log with delivery status tracking.
+              </div>
+            </div>
+
+            <div className="modal-footer" style={{ justifyContent: 'space-between' }}>
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={() => setShowWhatsAppModal(false)}
+                disabled={waSending}
+              >
+                Cancel
+              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  className="btn btn-outline"
+                  style={{ borderColor: '#25D366', color: '#075E54' }}
+                  onClick={handleOpenWhatsAppWeb}
+                  disabled={waSending}
+                  title="Open chat in WhatsApp Web or Mobile WhatsApp App"
+                >
+                  🌐 Open in WhatsApp Web
+                </button>
+                <button
+                  type="button"
+                  className="btn"
+                  style={{ backgroundColor: '#25D366', color: '#ffffff', fontWeight: 'bold' }}
+                  onClick={handleSendWhatsAppAPI}
+                  disabled={waSending}
+                >
+                  {waSending ? 'Dispatching...' : '🚀 Auto-Send via Cloud API'}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

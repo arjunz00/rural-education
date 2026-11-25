@@ -19,6 +19,7 @@ import quizRoutes from './routes/quizRoutes.js';
 import communicationRoutes from './routes/communicationRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
 import teacherRoutes from './routes/teacherRoutes.js';
+import whatsappRoutes from './routes/whatsappRoutes.js';
 
 dotenv.config();
 
@@ -65,6 +66,7 @@ app.use('/api/quizzes', quizRoutes);
 app.use('/api/communications', communicationRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/teacher', teacherRoutes);
+app.use('/api/whatsapp', whatsappRoutes);
 
 // Catch-all 404 for undefined API routes
 app.all('/api/*', (req, res) => {

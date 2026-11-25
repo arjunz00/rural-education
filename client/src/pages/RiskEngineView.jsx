@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { riskAPI, interventionsAPI } from '../services/api';
+import { riskAPI, interventionsAPI, whatsappAPI } from '../services/api';
 import { Icon } from '../components/Icons';
 
 export const RiskEngineView = () => {
@@ -212,12 +212,43 @@ export const RiskEngineView = () => {
                         {a.recommendedAction}
                       </td>
                       <td>
-                        <button
-                          className="btn btn-outline btn-sm"
-                          onClick={() => handleOpenIntervention(a)}
-                        >
-                          <Icon name="teacher" size={13} /> Intervene
-                        </button>
+                        <div className="flex items-center gap-1">
+                          <button
+                            className="btn btn-outline btn-sm"
+                            onClick={() => handleOpenIntervention(a)}
+                          >
+                            <Icon name="teacher" size={13} /> Intervene
+                          </button>
+                          <button
+                            type="button"
+                            className="btn btn-sm"
+                            style={{
+                              backgroundColor: '#25D366',
+                              color: '#fff',
+                              border: 'none',
+                              fontSize: '0.75rem',
+                              padding: '0.28rem 0.5rem',
+                              fontWeight: 'bold'
+                            }}
+                            title="Send WhatsApp consecutive absence warning to parent"
+                            onClick={async () => {
+                              try {
+                                const res = await whatsappAPI.send({
+                                  studentId: a.studentId,
+                                  templateType: 'consecutive_absence_alert'
+                                });
+                                if (res?.clickToChatUrl) {
+                                  window.open(res.clickToChatUrl, '_blank');
+                                }
+                                alert(`✓ WhatsApp alert dispatched to ${a.parentName}!`);
+                              } catch (err) {
+                                alert(`WhatsApp alert error: ${err.message}`);
+                              }
+                            }}
+                          >
+                            💬 WA
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))
